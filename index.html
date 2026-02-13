@@ -45,7 +45,6 @@ canvas{
   background: rgba(0,0,0,0.6);
 }
 
-/* Viền RGB */
 .box::before{
   content:"";
   position:absolute;
@@ -62,7 +61,6 @@ canvas{
   100%{background-position:400%}
 }
 
-/* Chữ 7 màu */
 .rainbow-text{
   font-size:20px;
   background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
@@ -77,7 +75,6 @@ canvas{
   100%{background-position:400%}
 }
 
-/* Rung nhẹ */
 @keyframes shake{
   0%{transform:translate(0,0)}
   25%{transform:translate(1px,-1px)}
@@ -152,7 +149,9 @@ function generateKey(){
 }
 
 function checkAccess(){
-  if(!document.referrer.includes("yeulink")){
+  const params = new URLSearchParams(window.location.search);
+
+  if(params.get("done") !== "1"){
     alert("Bạn chưa vượt link!");
     window.location.href = YEULINK;
     return;
