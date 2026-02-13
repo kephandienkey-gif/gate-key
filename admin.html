@@ -1,80 +1,55 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN PANEL</title>
-
+<title>Admin Panel</title>
 <style>
 body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#0f0f0f,#1a1a1a);
+  background:#111;
   color:white;
-  text-align:center;
+  font-family:sans-serif;
+  margin:0;
+  padding:20px;
 }
-
-h2{
-  font-size:32px;
-  margin-top:20px;
-}
-
 .box{
-  background:#1e1e1e;
-  padding:25px;
-  margin:20px auto;
-  width:450px;
-  border-radius:20px;
-  box-shadow:0 0 25px #000;
+  max-width:500px;
+  margin:auto;
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:12px;
 }
-
-.stats{
-  font-size:18px;
-  margin-bottom:15px;
-  color:#00e5ff;
-}
-
-input,button{
-  width:95%;
+input{
+  width:100%;
   padding:10px;
-  margin:6px;
-  border-radius:10px;
+  margin:5px 0;
   border:none;
-  font-size:14px;
+  border-radius:6px;
 }
-
 button{
-  cursor:pointer;
+  padding:10px;
+  margin:5px 0;
+  width:100%;
+  border:none;
+  border-radius:6px;
   font-weight:bold;
-  transition:0.2s;
+  cursor:pointer;
 }
-
-button:hover{
-  transform:scale(1.05);
-}
-
-.create{background:#00c853;color:white;}
-.random{background:#2979ff;color:white;}
-.delete{background:#d50000;color:white;}
-.edit{background:#ff9100;color:black;}
-.extend{background:#00b0ff;color:white;}
-.logout{background:orange;color:black;}
-
+.create{background:#00ffcc;}
+.random{background:#ffcc00;}
+.bulk{background:#00aaff;}
+.logout{background:#ff4444;}
 .keyItem{
-  background:#2c2c2c;
-  margin:10px;
-  padding:15px;
-  border-radius:15px;
-  font-size:14px;
+  background:#222;
+  padding:10px;
+  margin:8px 0;
+  border-radius:8px;
 }
 </style>
 </head>
 <body>
 
-<h2>🔐 ADMIN CONTROL PANEL</h2>
-
 <div class="box" id="loginBox">
-  <h3>Đăng nhập Admin</h3>
+  <h2>Đăng nhập Admin</h2>
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
@@ -82,81 +57,43 @@ button:hover{
 
 <div class="box" id="adminBox" style="display:none;">
 
-  <div class="stats">
-    📦 Tổng key: <span id="totalKeys">0</span><br>
-    🔥 Tổng lượt get: <span id="totalGet">0</span>
-  </div>
+  <h3>Thống kê</h3>
+  Tổng key: <span id="totalKeys">0</span><br>
+  Tổng lượt get: <span id="totalGet">0</span>
 
-  <h3>Tạo Key</h3>
-  <input type="text" id="newKey" placeholder="Nhập key (để trống = random)">
-  <input type="number" id="expireHours" placeholder="Hết hạn sau (giờ)">
-  <button class="create" onclick="createKey()">TẠO KEY</button>
-  <button class="random" onclick="createRandom()">TẠO RANDOM</button>
-<h3>Tạo key hàng loạt</h3>
+  <hr>
 
-<input id="bulkCount" type="number" placeholder="Số lượng key (vd: 50)">
-<input id="bulkUses" type="number" placeholder="Số lượt mỗi key">
-<input id="bulkExpire" type="number" placeholder="Hết hạn (phút)">
-<button onclick="createBulk()">Tạo hàng loạt</button>
+  <h3>Tạo key thủ công</h3>
+  <input type="text" id="newKey" placeholder="Nhập key (để trống sẽ random)">
+  <input type="number" id="expireHours" placeholder="Hết hạn (giờ)">
+  <button class="create" onclick="createKey()">Tạo Key</button>
+
+  <h3>Tạo key hàng loạt</h3>
+  <input type="number" id="bulkCount" placeholder="Số lượng key">
+  <input type="number" id="bulkUses" placeholder="Số lượt mỗi key">
+  <input type="number" id="bulkExpire" placeholder="Hết hạn (giờ)">
+  <button class="bulk" onclick="createBulk()">Tạo hàng loạt</button>
+
   <h3>Danh sách key</h3>
   <div id="keyList"></div>
 
   <button class="logout" onclick="logout()">Đăng xuất</button>
+
 </div>
 
 <script type="module">
 
-// import ở đây
-import { ... } from "...";
-
-// firebaseConfig ở đây
-
-// các function createKey(), createRandom(), loadKeys() ...
-
-// 👇 DÁN HÀM NÀY VÀO ĐÂY
-window.createBulk = async function(){
-
-  const count = parseInt(document.getElementById("bulkCount").value);
-  const maxUses = parseInt(document.getElementById("bulkUses").value);
-  const expire = parseInt(document.getElementById("bulkExpire").value);
-
-  if(!count || count <= 0){
-    alert("Nhập số lượng key");
-    return;
-  }
-
-  for(let i = 0; i < count; i++){
-
-    const randomKey = "VIP-" + Math.random().toString(36).substring(2,10).toUpperCase();
-
-    await addDoc(collection(db,"keys"),{
-      key: randomKey,
-      maxUses: maxUses || 1,
-      used: 0,
-      createdAt: Date.now(),
-      expiresAt: Date.now() + (expire * 60000)
-    });
-
-  }
-
-  alert("Đã tạo " + count + " key!");
-  loadKeys(); // hoặc load(); tùy file bạn đang dùng
-}
-
-</script>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig = { 
-  apiKey : "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw" , 
-  authDomain : "kephandienkey-fbee7.firebaseapp.com" , 
-  projectId : "kephandienkey-fbee7" , 
-  storageBucket : "kephandienkey-fbee7.firebasestorage.app" , 
-  messagingSenderId : "1004820527441" , 
-  appId : "1:1004820527441:web:a2ffa3aefb82b99a97fb70" 
+const firebaseConfig = {
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.appspot.com",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -166,18 +103,23 @@ const auth = getAuth(app);
 const loginBox = document.getElementById("loginBox");
 const adminBox = document.getElementById("adminBox");
 const keyList = document.getElementById("keyList");
-
 const totalKeysEl = document.getElementById("totalKeys");
 const totalGetEl = document.getElementById("totalGet");
 
+function randomKey(){
+  return "VIP-" + Math.random().toString(36).substring(2,10).toUpperCase();
+}
+
 window.login = async function(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
   try{
-    await signInWithEmailAndPassword(auth,email.value,password.value);
-    alert("Đăng nhập thành công!");
+    await signInWithEmailAndPassword(auth,email,password);
+    alert("Đăng nhập thành công");
   }catch{
-    alert("Sai tài khoản!");
+    alert("Sai tài khoản");
   }
-};
+}
 
 onAuthStateChanged(auth,(user)=>{
   if(user){
@@ -190,36 +132,46 @@ onAuthStateChanged(auth,(user)=>{
   }
 });
 
-function randomKey(){
-  return "KEY-" + Math.random().toString(36).substring(2,8).toUpperCase();
-}
-
-window.createRandom = function(){
-  newKey.value = randomKey();
-};
-
 window.createKey = async function(){
-  let key = newKey.value;
-  const hours = expireHours.value;
+  let key = document.getElementById("newKey").value;
+  const hours = parseInt(document.getElementById("expireHours").value);
 
-  if(!hours){
-    alert("Nhập giờ hết hạn!");
-    return;
-  }
-
+  if(!hours){ alert("Nhập giờ hết hạn"); return; }
   if(!key) key = randomKey();
-
-  const expireTime = Date.now() + hours * 60 * 60 * 1000;
 
   await addDoc(collection(db,"keys"),{
     key:key,
-    expire:expireTime,
-    get:0
+    maxUses:1,
+    used:0,
+    createdAt:Date.now(),
+    expiresAt:Date.now() + hours*60*60*1000
   });
 
-  alert("Tạo key thành công!");
+  alert("Tạo key thành công");
   loadKeys();
-};
+}
+
+window.createBulk = async function(){
+
+  const count = parseInt(document.getElementById("bulkCount").value);
+  const uses = parseInt(document.getElementById("bulkUses").value);
+  const hours = parseInt(document.getElementById("bulkExpire").value);
+
+  if(!count || count<=0){ alert("Nhập số lượng"); return; }
+
+  for(let i=0;i<count;i++){
+    await addDoc(collection(db,"keys"),{
+      key: randomKey(),
+      maxUses: uses || 1,
+      used:0,
+      createdAt:Date.now(),
+      expiresAt:Date.now() + hours*60*60*1000
+    });
+  }
+
+  alert("Đã tạo "+count+" key");
+  loadKeys();
+}
 
 async function loadKeys(){
   keyList.innerHTML="";
@@ -231,76 +183,38 @@ async function loadKeys(){
   snapshot.forEach(docSnap=>{
     const data = docSnap.data();
 
-    if(Date.now() > data.expire){
+    if(Date.now()>data.expiresAt){
       deleteDoc(doc(db,"keys",docSnap.id));
       return;
     }
 
     totalKeys++;
-    totalGet += data.get || 0;
+    totalGet += data.used || 0;
 
     const div = document.createElement("div");
     div.className="keyItem";
-    div.innerHTML=`
+    div.innerHTML = `
       🔑 ${data.key}<br>
-      ⏳ ${new Date(data.expire).toLocaleString()}<br>
-      🔥 Lượt get: ${data.get || 0}<br>
-      <button onclick="extendKey('${docSnap.id}')" class="extend">+ Giờ</button>
-      <button onclick="editKey('${docSnap.id}')" class="edit">Đặt lại thời gian</button>
-      <button onclick="deleteKey('${docSnap.id}')" class="delete">XOÁ</button>
+      ⏳ ${new Date(data.expiresAt).toLocaleString()}<br>
+      🔥 ${data.used || 0}/${data.maxUses}
+      <br>
+      <button onclick="deleteKey('${docSnap.id}')">Xóa</button>
     `;
     keyList.appendChild(div);
   });
 
-  totalKeysEl.textContent = totalKeys;
-  totalGetEl.textContent = totalGet;
+  totalKeysEl.innerText = totalKeys;
+  totalGetEl.innerText = totalGet;
 }
-
-window.extendKey = async function(id){
-  const hours = prompt("Gia hạn thêm bao nhiêu giờ?");
-  if(!hours) return;
-
-  const docRef = doc(db,"keys",id);
-  const snapshot = await getDocs(collection(db,"keys"));
-};
-
-window.editKey = async function(id){
-  const hours = prompt("Đặt lại thời gian (giờ từ bây giờ)?");
-  if(!hours) return;
-
-  const newExpire = Date.now() + hours * 60 * 60 * 1000;
-  await updateDoc(doc(db,"keys",id),{
-    expire:newExpire
-  });
-
-  loadKeys();
-};
-
-window.extendKey = async function(id){
-  const hours = prompt("Gia hạn thêm bao nhiêu giờ?");
-  if(!hours) return;
-
-  const docRef = doc(db,"keys",id);
-  const snapshot = await getDocs(collection(db,"keys"));
-
-  snapshot.forEach(async d=>{
-    if(d.id === id){
-      const newExpire = d.data().expire + hours * 60 * 60 * 1000;
-      await updateDoc(docRef,{ expire:newExpire });
-    }
-  });
-
-  loadKeys();
-};
 
 window.deleteKey = async function(id){
   await deleteDoc(doc(db,"keys",id));
   loadKeys();
-};
+}
 
 window.logout = async function(){
   await signOut(auth);
-};
+}
 
 </script>
 
