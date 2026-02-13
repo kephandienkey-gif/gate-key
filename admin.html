@@ -9,78 +9,85 @@ body{
   background:#111;
   color:white;
   font-family:monospace;
-  margin:0;
   padding:20px;
   text-align:center;
 }
 
-h2{
-  color:cyan;
+h2{ color:cyan; }
+
+input{
+  padding:6px;
+  margin:5px;
+  border-radius:6px;
+  border:none;
+  text-align:center;
 }
 
 button{
-  padding:8px 12px;
+  padding:6px 10px;
+  margin:5px;
   border:none;
   border-radius:6px;
   cursor:pointer;
   font-weight:bold;
-  margin:3px;
 }
 
+.createBtn{ background:lime; }
 .loadBtn{ background:cyan; }
 .deleteBtn{ background:red; color:white; }
-.logoutBtn{ background:orange; }
 
 table{
   margin:auto;
   margin-top:20px;
   border-collapse:collapse;
   width:95%;
-  max-width:1000px;
 }
 
 th,td{
   border:1px solid white;
-  padding:8px;
-  font-size:13px;
+  padding:6px;
+  font-size:12px;
   word-break:break-all;
 }
 
-th{
-  background:#222;
-}
+th{ background:#222; }
 </style>
 </head>
 <body>
 
-<h2>🔥 ADMIN PANEL - GATE KEY SYSTEM 🔥</h2>
+<h2>🔥 ADMIN PANEL 🔥</h2>
+
+<h3>TẠO KEY MỚI</h3>
+
+<input type="number" id="hours" placeholder="Số giờ (vd: 24)">
+<input type="number" id="devices" placeholder="Số thiết bị (vd: 1)">
+<br>
+<button class="createBtn" onclick="createKey()">TẠO KEY</button>
+
+<hr>
 
 <button class="loadBtn" onclick="loadKeys()">TẢI DANH SÁCH KEY</button>
-<button class="logoutBtn" onclick="logout()">THOÁT</button>
-
-<br><br>
 
 <div>
-  <b>Tổng số key:</b> <span id="total">0</span>
+  Tổng số key: <span id="total">0</span>
 </div>
 
 <table>
-  <thead>
-    <tr>
-      <th>DeviceID</th>
-      <th>Key</th>
-      <th>Hết hạn</th>
-      <th>Trạng thái</th>
-      <th>Xóa</th>
-    </tr>
-  </thead>
-  <tbody id="keyList"></tbody>
+<thead>
+<tr>
+<th>Key</th>
+<th>Thiết bị</th>
+<th>Hết hạn</th>
+<th>Xóa</th>
+</tr>
+</thead>
+<tbody id="keyList"></tbody>
 </table>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc } 
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -95,36 +102,52 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// LOAD TOÀN BỘ KEY
+// TẠO KEY
+window.createKey = async function(){
+
+  const hours = parseInt(document.getElementById("hours").value);
+  const devices = parseInt(document.getElementById("devices").value);
+
+  if(!hours || !devices){
+    alert("Nhập đầy đủ thông tin!");
+    return;
+  }
+
+  const key = "KPD_" + Math.random().toString(36).substring(2,10).toUpperCase();
+  const expire = Date.now() + hours * 60 * 60 * 1000;
+
+  await addDoc(collection(db,"adminKeys"),{
+    key:key,
+    maxDevices:devices,
+    expire:expire,
+    created:Date.now()
+  });
+
+  alert("Tạo key thành công:\n" + key);
+
+  loadKeys();
+}
+
+// LOAD KEY
 window.loadKeys = async function(){
 
-  const querySnapshot = await getDocs(collection(db,"keys"));
+  const querySnapshot = await getDocs(collection(db,"adminKeys"));
   const list = document.getElementById("keyList");
-  list.innerHTML = "";
-  let count = 0;
+  list.innerHTML="";
+  let count=0;
 
   querySnapshot.forEach((docSnap)=>{
-
     count++;
 
     const data = docSnap.data();
-    const device = docSnap.id;
-    const key = data.key || "Không có";
-    const expireTime = data.expire || 0;
-
-    const expireDate = new Date(expireTime).toLocaleString();
-    const status = Date.now() > expireTime 
-      ? "<span style='color:red'>HẾT HẠN</span>"
-      : "<span style='color:lime'>CÒN HẠN</span>";
 
     list.innerHTML += `
       <tr>
-        <td>${device}</td>
-        <td>${key}</td>
-        <td>${expireDate}</td>
-        <td>${status}</td>
+        <td>${data.key}</td>
+        <td>${data.maxDevices}</td>
+        <td>${new Date(data.expire).toLocaleString()}</td>
         <td>
-          <button class="deleteBtn" onclick="deleteKey('${device}')">
+          <button class="deleteBtn" onclick="deleteKey('${docSnap.id}')">
             XÓA
           </button>
         </td>
@@ -132,21 +155,15 @@ window.loadKeys = async function(){
     `;
   });
 
-  document.getElementById("total").innerText = count;
+  document.getElementById("total").innerText=count;
 }
 
 // XÓA KEY
 window.deleteKey = async function(id){
-  if(confirm("Bạn chắc chắn muốn xóa key này?")){
-    await deleteDoc(doc(db,"keys",id));
-    alert("Đã xóa thành công!");
+  if(confirm("Xóa key này?")){
+    await deleteDoc(doc(db,"adminKeys",id));
     loadKeys();
   }
-}
-
-// THOÁT
-window.logout = function(){
-  window.location.href = "index.html";
 }
 
 </script>
