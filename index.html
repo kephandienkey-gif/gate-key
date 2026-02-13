@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>GATE KEY SYSTEM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Key</title>
 
 <style>
 body{
@@ -11,272 +12,121 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  font-family:monospace;
-  color:white;
-  overflow:hidden;
-  background: linear-gradient(-45deg,red,orange,yellow,green,cyan,blue,violet);
-  background-size:400% 400%;
-  animation: rainbowBG 10s ease infinite;
+  font-family:Arial;
+  background:linear-gradient(135deg,#00c853,#64dd17);
 }
 
-@keyframes rainbowBG{
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
-
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:0;
-}
-
-.box{
-  position:relative;
-  z-index:1;
-  padding:40px;
-  text-align:center;
+.card{
+  background:rgba(0,0,0,0.65);
+  padding:25px;
   border-radius:20px;
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,0.6);
+  text-align:center;
   width:320px;
+  box-shadow:0 0 25px rgba(0,0,0,0.5);
 }
 
-.rainbow-text{
-  font-size:18px;
-  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
-  background-size:400%;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:textRGB 5s linear infinite;
-}
-
-@keyframes textRGB{
-  0%{background-position:0%}
-  100%{background-position:400%}
-}
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
+.card h2{
+  color:#ff5252;
   cursor:pointer;
-  font-weight:bold;
-  margin-top:10px;
-  background:linear-gradient(90deg,cyan,blue);
-  color:white;
-  width:100%;
+  font-size:18px;
+  margin-bottom:20px;
 }
 
-#key{ font-size:22px; margin-top:15px; word-break:break-all; }
-#countdown{ margin-top:8px; color:yellow; font-size:14px; }
+.btn{
+  display:block;
+  margin:10px 0;
+  padding:10px;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:bold;
+  color:white;
+  background:linear-gradient(90deg,#00e5ff,#2979ff);
+  transition:0.3s;
+}
 
-.hidden{ display:none; }
-
-.links{
-  margin-top:15px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.btn:hover{
+  transform:scale(1.05);
 }
 
 .thanks{
-  margin-top:12px;
-  font-size:18px;
+  color:yellow;
   font-weight:bold;
-  animation: glow 1.5s infinite alternate;
+  margin-bottom:10px;
+  animation:glow 1s infinite alternate;
 }
 
 @keyframes glow{
-  from { color:#00ffcc; }
-  to { color:#ff00ff; }
+  from{color:#00ffff;}
+  to{color:#ff00ff;}
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="particles"></canvas>
+<div class="card">
+  <h2 id="secretAdmin">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
 
-<div class="box">
-
-  <h2 class="rainbow-text">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
-
-  <button id="mainBtn">VƯỢT LINK ĐỂ LẤY KEY</button>
-
-  <div class="links">
-    <button onclick="window.open('https://zalo.me/g/cocmne792')">💬 ZALO NHÓM</button>
-    <button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">▶ YOUTUBE</button>
-    <button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">🎵 TIKTOK</button>
+  <div id="mainArea">
+    <a href="https://yeulink.com/kephandienkey333" class="btn">
+      🔓 VƯỢT LINK ĐỂ LẤY KEY
+    </a>
   </div>
 
-  <div id="keyArea" class="hidden">
-
+  <div id="afterArea" style="display:none;">
     <div class="thanks">
-      ❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ TUI GÓI MÌ 🍜 ❤️
+      ❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ 🍜 ❤️
     </div>
 
-    <button onclick="generateNewKey()">GET KEY</button>
-
-    <div id="key"></div>
-    <div id="countdown"></div>
-
-    <button onclick="copyKey()">COPY KEY</button>
-
+    <a href="key.html" class="btn">
+      🔑 GET KEY NGAY
+    </a>
   </div>
 
+  <a href="https://zalo.me/g/cocmne792" class="btn">
+    💬 ZALO NHÓM
+  </a>
+
+  <a href="https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1" class="btn">
+    ▶ YOUTUBE
+  </a>
+
+  <a href="https://tiktok.com/@ghetnhanvatchinhkk" class="btn">
+    🎵 TIKTOK
+  </a>
+
 </div>
 
-<!-- ADMIN ẨN -->
-<div style="position:fixed;bottom:10px;width:100%;text-align:center;z-index:5;">
-  <small style="opacity:0.2;cursor:pointer;" onclick="openAdmin()">ADMIN</small>
-</div>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
-  authDomain: "kephandienkey-fbee7.firebaseapp.com",
-  projectId: "kephandienkey-fbee7",
-  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
-  messagingSenderId: "1004820527441",
-  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const YEULINK = "https://yeulink.com/kephandienkey333";
-
+<script>
+// Kiểm tra đã vượt link chưa
 const params = new URLSearchParams(window.location.search);
-const done = params.get("done");
-
-const mainBtn = document.getElementById("mainBtn");
-const keyArea = document.getElementById("keyArea");
-
-const deviceID = localStorage.getItem("deviceID") || crypto.randomUUID();
-localStorage.setItem("deviceID", deviceID);
-
-if(done === "1"){
-  mainBtn.classList.add("hidden");
-  keyArea.classList.remove("hidden");
-  sessionStorage.setItem("canGenerate","true");
-}else{
-  mainBtn.onclick = () => {
-    window.location.href = YEULINK;
-  };
+if(params.get("done") === "1"){
+  document.getElementById("mainArea").style.display = "none";
+  document.getElementById("afterArea").style.display = "block";
 }
 
-function generateKey(){
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
-  for(let i=0;i<16;i++){
-    result += chars.charAt(Math.floor(Math.random()*chars.length));
-  }
-  return "KPD_" + result.match(/.{1,4}/g).join("-");
-}
+// ADMIN bí mật 7 lần
+let tapCount = 0;
+let tapTimeout;
 
-window.generateNewKey = async function(){
+document.getElementById("secretAdmin").addEventListener("click", function(){
+    tapCount++;
+    clearTimeout(tapTimeout);
 
-  if(sessionStorage.getItem("canGenerate") !== "true"){
-    alert("Bạn cần vượt link để lấy key mới!");
-    return;
-  }
-
-  let newKey = generateKey();
-  let expire = Date.now() + 24*60*60*1000;
-
-  await setDoc(doc(db, "keys", deviceID), {
-    key: newKey,
-    expire: expire
-  });
-
-  sessionStorage.removeItem("canGenerate");
-  showKey();
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
-
-async function showKey(){
-  const docRef = doc(db, "keys", deviceID);
-  const docSnap = await getDoc(docRef);
-
-  if(!docSnap.exists()) return;
-
-  const data = docSnap.data();
-  const key = data.key;
-  const expire = data.expire;
-
-  document.getElementById("key").innerHTML = key;
-
-  setInterval(()=>{
-    let diff = expire - Date.now();
-    if(diff <= 0){
-      document.getElementById("countdown").innerHTML="KEY HẾT HẠN";
-      return;
+    if(tapCount >= 7){
+        const pass = prompt("Nhập mật khẩu admin:");
+        if(pass === "admin123"){
+            window.location.href = "admin.html";
+        }else{
+            alert("Sai mật khẩu!");
+        }
+        tapCount = 0;
     }
-    let h = Math.floor(diff/1000/60/60);
-    let m = Math.floor(diff/1000/60)%60;
-    let s = Math.floor(diff/1000)%60;
-    document.getElementById("countdown").innerHTML =
-      "Hết hạn sau: "+h+"h "+m+"m "+s+"s";
-  },1000);
-}
 
-window.copyKey = function(){
-  let key = document.getElementById("key").innerText;
-  navigator.clipboard.writeText(key);
-  alert("Đã copy key!");
-}
-
-window.openAdmin = function(){
-  const pass = prompt("Nhập mật khẩu admin:");
-  if(pass === "admin123"){
-    window.location.href = "admin.html";
-  }else{
-    alert("Sai mật khẩu!");
-  }
-}
-
-if(done === "1"){
-  showKey();
-}
-
-// HẠT BAY
-const canvas = document.getElementById("particles");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let particles=[];
-for(let i=0;i<60;i++){
-  particles.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*2,
-    d:Math.random()*1
-  });
-}
-
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="white";
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
-    ctx.fill();
-    p.y+=p.d;
-    if(p.y>canvas.height){
-      p.y=0;
-      p.x=Math.random()*canvas.width;
-    }
-  });
-}
-
-setInterval(draw,30);
-
+    tapTimeout = setTimeout(() => {
+        tapCount = 0;
+    }, 3000);
+});
 </script>
 
 </body>
