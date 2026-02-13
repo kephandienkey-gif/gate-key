@@ -2,45 +2,124 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Get Key</title>
+<title>GATE KEY SYSTEM</title>
 
 <style>
 body{
-  font-family:Arial;
-  text-align:center;
-  padding:50px;
-  background:linear-gradient(270deg,red,orange,yellow,green,blue,indigo,violet);
-  background-size:1400% 1400%;
-  animation:rainbow 15s ease infinite;
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:monospace;
   color:white;
+  overflow:hidden;
+  background: linear-gradient(-45deg,red,orange,yellow,green,cyan,blue,violet);
+  background-size:400% 400%;
+  animation: rainbowBG 10s ease infinite;
 }
-@keyframes rainbow{
+
+@keyframes rainbowBG{
   0%{background-position:0% 50%}
   50%{background-position:100% 50%}
   100%{background-position:0% 50%}
 }
-button{
-  padding:15px 30px;
+
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:0;
+}
+
+.box{
+  position:relative;
+  z-index:1;
+  padding:40px;
+  text-align:center;
+  border-radius:20px;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.6);
+  width:300px;
+}
+
+.rainbow-text{
   font-size:18px;
+  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+  background-size:400%;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:textRGB 5s linear infinite;
+}
+
+@keyframes textRGB{
+  0%{background-position:0%}
+  100%{background-position:400%}
+}
+
+button{
+  padding:10px;
   border:none;
   border-radius:10px;
   cursor:pointer;
+  font-weight:bold;
+  margin-top:10px;
+  background:linear-gradient(90deg,cyan,blue);
+  color:white;
+  width:100%;
+}
+
+#key{ font-size:22px; margin-top:15px; word-break:break-all; }
+#countdown{ margin-top:8px; color:yellow; font-size:14px; }
+
+.hidden{ display:none; }
+
+.links{
+  margin-top:15px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.thanks{
+  margin-top:10px;
+  font-size:16px;
+  color:#00ffcc;
+  font-weight:bold;
 }
 </style>
 </head>
-
 <body>
 
-<h1>GET KEY để ủng hộ tui gói mì 🍜</h1>
-<button onclick="generateNewKey()">GET KEY</button>
+<canvas id="particles"></canvas>
 
-<h2 id="result"></h2>
+<div class="box">
+
+  <h2 class="rainbow-text">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
+
+  <button id="mainBtn">VƯỢT LINK ĐỂ LẤY KEY</button>
+
+  <div class="links">
+    <button onclick="window.open('https://zalo.me/g/cocmne792')">💬 ZALO NHÓM</button>
+    <button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">▶ YOUTUBE</button>
+    <button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">🎵 TIKTOK</button>
+  </div>
+
+  <div id="keyArea" class="hidden">
+    <div class="thanks">❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ ❤️</div>
+    <button onclick="generateNewKey()">GET KEY</button>
+    <div id="key"></div>
+    <div id="countdown"></div>
+    <button onclick="copyKey()">COPY KEY</button>
+  </div>
+
+</div>
 
 <script type="module">
 
+// ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
@@ -54,41 +133,129 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ===== LINK =====
+const YEULINK = "https://yeulink.com/kephandienkey333";
+
+const params = new URLSearchParams(window.location.search);
+const done = params.get("done");
+
+const mainBtn = document.getElementById("mainBtn");
+const keyArea = document.getElementById("keyArea");
+
+const deviceID = localStorage.getItem("deviceID") || crypto.randomUUID();
+localStorage.setItem("deviceID", deviceID);
+
+if(done === "1"){
+  mainBtn.classList.add("hidden");
+  keyArea.classList.remove("hidden");
+  sessionStorage.setItem("canGenerate","true");
+}else{
+  mainBtn.onclick = () => {
+    window.location.href = YEULINK;
+  };
+}
+
+// ===== TẠO KEY =====
 function generateKey(){
-  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result="";
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
   for(let i=0;i<16;i++){
-    result+=chars.charAt(Math.floor(Math.random()*chars.length));
+    result += chars.charAt(Math.floor(Math.random()*chars.length));
   }
-  return "KPD_"+result.match(/.{1,4}/g).join("-");
+  return "KPD_" + result.match(/.{1,4}/g).join("-");
 }
 
-function getDeviceId(){
-  let id = localStorage.getItem("deviceId");
-  if(!id){
-    id="DEV_"+Math.random().toString(36).substring(2,12);
-    localStorage.setItem("deviceId",id);
-  }
-  return id;
-}
-
+// ===== TẠO KEY MỚI =====
 window.generateNewKey = async function(){
 
-  let key = generateKey();
-  let deviceId = getDeviceId();
-  let createdAt = Date.now();
-  let expireAt = createdAt + 24*60*60*1000;
+  if(sessionStorage.getItem("canGenerate") !== "true"){
+    alert("Bạn cần vượt link để lấy key mới!");
+    return;
+  }
 
-  await addDoc(collection(db,"keys"),{
-    key:key,
-    deviceId:deviceId,
-    createdAt:createdAt,
-    expireAt:expireAt
+  let newKey = generateKey();
+  let expire = Date.now() + 24*60*60*1000;
+
+  await setDoc(doc(db, "keys", deviceID), {
+    key: newKey,
+    expire: expire
   });
 
-  document.getElementById("result").innerHTML =
-  "Cảm ơn đã ủng hộ ❤️<br><br>" + key;
+  sessionStorage.removeItem("canGenerate");
+  showKey();
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
+
+// ===== HIỂN THỊ KEY =====
+async function showKey(){
+
+  const docRef = doc(db, "keys", deviceID);
+  const docSnap = await getDoc(docRef);
+
+  if(!docSnap.exists()) return;
+
+  const data = docSnap.data();
+  const key = data.key;
+  const expire = data.expire;
+
+  document.getElementById("key").innerHTML = key;
+
+  setInterval(()=>{
+    let diff = expire - Date.now();
+    if(diff <= 0){
+      document.getElementById("countdown").innerHTML="KEY HẾT HẠN";
+      return;
+    }
+    let h = Math.floor(diff/1000/60/60);
+    let m = Math.floor(diff/1000/60)%60;
+    let s = Math.floor(diff/1000)%60;
+    document.getElementById("countdown").innerHTML =
+      "Hết hạn sau: "+h+"h "+m+"m "+s+"s";
+  },1000);
+}
+
+window.copyKey = function(){
+  let key = document.getElementById("key").innerText;
+  navigator.clipboard.writeText(key);
+  alert("Đã copy key!");
+}
+
+if(done === "1"){
+  showKey();
+}
+
+// ===== HẠT BAY =====
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles=[];
+for(let i=0;i<60;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*2,
+    d:Math.random()*1
+  });
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="white";
+  particles.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
+    ctx.fill();
+    p.y+=p.d;
+    if(p.y>canvas.height){
+      p.y=0;
+      p.x=Math.random()*canvas.width;
+    }
+  });
+}
+
+setInterval(draw,30);
 
 </script>
 
