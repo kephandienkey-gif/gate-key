@@ -2,62 +2,86 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>KPD ADMIN</title>
+<title>ADMIN PANEL</title>
+
 <style>
 body{
   background:#111;
   color:white;
-  font-family:Arial;
+  font-family:monospace;
+  margin:0;
+  padding:20px;
   text-align:center;
 }
-input,select,button{
-  margin:5px;
-  padding:8px;
-  border-radius:5px;
-  border:none;
+
+h2{
+  color:cyan;
 }
+
 button{
-  background:#00ff99;
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
   cursor:pointer;
+  font-weight:bold;
+  margin:3px;
 }
-.keyBox{
+
+.loadBtn{ background:cyan; }
+.deleteBtn{ background:red; color:white; }
+.logoutBtn{ background:orange; }
+
+table{
+  margin:auto;
+  margin-top:20px;
+  border-collapse:collapse;
+  width:95%;
+  max-width:1000px;
+}
+
+th,td{
+  border:1px solid white;
+  padding:8px;
+  font-size:13px;
+  word-break:break-all;
+}
+
+th{
   background:#222;
-  margin:10px;
-  padding:10px;
-  border-radius:10px;
 }
 </style>
 </head>
 <body>
 
-<h2>KPD ADMIN PANEL</h2>
+<h2>🔥 ADMIN PANEL - GATE KEY SYSTEM 🔥</h2>
 
-<input type="password" id="pass" placeholder="Mật khẩu admin">
-<button onclick="login()">Đăng nhập</button>
+<button class="loadBtn" onclick="loadKeys()">TẢI DANH SÁCH KEY</button>
+<button class="logoutBtn" onclick="logout()">THOÁT</button>
 
-<div id="panel" style="display:none;">
+<br><br>
 
-<h3>Tạo Key</h3>
-
-<select id="type">
-<option value="FREE">FREE</option>
-<option value="SUPER">SUPER</option>
-</select>
-
-<input type="number" id="hours" placeholder="Số giờ">
-<input type="number" id="devices" placeholder="Số thiết bị">
-
-<button onclick="createKey()">Tạo Key</button>
-
-<h3>Danh sách Key</h3>
-<div id="list"></div>
-
+<div>
+  <b>Tổng số key:</b> <span id="total">0</span>
 </div>
+
+<table>
+  <thead>
+    <tr>
+      <th>DeviceID</th>
+      <th>Key</th>
+      <th>Hết hạn</th>
+      <th>Trạng thái</th>
+      <th>Xóa</th>
+    </tr>
+  </thead>
+  <tbody id="keyList"></tbody>
+</table>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
@@ -71,59 +95,58 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.login = function(){
-  if(pass.value === "admin123"){
-    panel.style.display = "block";
-    loadKeys();
-  } else {
-    alert("Sai mật khẩu");
-  }
-}
+// LOAD TOÀN BỘ KEY
+window.loadKeys = async function(){
 
-window.createKey = async function(){
-
-  if(!hours.value || !devices.value){
-    alert("Nhập đầy đủ giờ và thiết bị");
-    return;
-  }
-
-  const key = "KPD_" + Math.random().toString(36).substring(2,8).toUpperCase();
-  const expire = Date.now() + parseInt(hours.value) * 3600000;
-
-  await setDoc(doc(db,"keys",key),{
-    type: type.value,
-    expireAt: Timestamp.fromMillis(expire),
-    maxDevices: parseInt(devices.value),
-    usedDevices: []
-  });
-
-  alert("Đã tạo: " + key);
-
-  hours.value="";
-  devices.value="";
-  loadKeys();
-}
-
-async function loadKeys(){
-  const query = await getDocs(collection(db,"keys"));
+  const querySnapshot = await getDocs(collection(db,"keys"));
+  const list = document.getElementById("keyList");
   list.innerHTML = "";
+  let count = 0;
 
-  query.forEach(docu=>{
-    const d = docu.data();
+  querySnapshot.forEach((docSnap)=>{
+
+    count++;
+
+    const data = docSnap.data();
+    const device = docSnap.id;
+    const key = data.key || "Không có";
+    const expireTime = data.expire || 0;
+
+    const expireDate = new Date(expireTime).toLocaleString();
+    const status = Date.now() > expireTime 
+      ? "<span style='color:red'>HẾT HẠN</span>"
+      : "<span style='color:lime'>CÒN HẠN</span>";
+
     list.innerHTML += `
-      <div class="keyBox">
-      <b>${docu.id}</b><br>
-      Loại: ${d.type}<br>
-      Thiết bị: ${d.maxDevices}<br>
-      <button onclick="deleteKey('${docu.id}')">Xoá</button>
-      </div>
+      <tr>
+        <td>${device}</td>
+        <td>${key}</td>
+        <td>${expireDate}</td>
+        <td>${status}</td>
+        <td>
+          <button class="deleteBtn" onclick="deleteKey('${device}')">
+            XÓA
+          </button>
+        </td>
+      </tr>
     `;
   });
+
+  document.getElementById("total").innerText = count;
 }
 
+// XÓA KEY
 window.deleteKey = async function(id){
-  await deleteDoc(doc(db,"keys",id));
-  loadKeys();
+  if(confirm("Bạn chắc chắn muốn xóa key này?")){
+    await deleteDoc(doc(db,"keys",id));
+    alert("Đã xóa thành công!");
+    loadKeys();
+  }
+}
+
+// THOÁT
+window.logout = function(){
+  window.location.href = "index.html";
 }
 
 </script>
