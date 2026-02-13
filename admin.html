@@ -92,7 +92,12 @@ button:hover{
   <input type="number" id="expireHours" placeholder="Hết hạn sau (giờ)">
   <button class="create" onclick="createKey()">TẠO KEY</button>
   <button class="random" onclick="createRandom()">TẠO RANDOM</button>
+<h3>Tạo key hàng loạt</h3>
 
+<input id="bulkCount" type="number" placeholder="Số lượng key (vd: 50)">
+<input id="bulkUses" type="number" placeholder="Số lượt mỗi key">
+<input id="bulkExpire" type="number" placeholder="Hết hạn (phút)">
+<button onclick="createBulk()">Tạo hàng loạt</button>
   <h3>Danh sách key</h3>
   <div id="keyList"></div>
 
@@ -101,6 +106,44 @@ button:hover{
 
 <script type="module">
 
+// import ở đây
+import { ... } from "...";
+
+// firebaseConfig ở đây
+
+// các function createKey(), createRandom(), loadKeys() ...
+
+// 👇 DÁN HÀM NÀY VÀO ĐÂY
+window.createBulk = async function(){
+
+  const count = parseInt(document.getElementById("bulkCount").value);
+  const maxUses = parseInt(document.getElementById("bulkUses").value);
+  const expire = parseInt(document.getElementById("bulkExpire").value);
+
+  if(!count || count <= 0){
+    alert("Nhập số lượng key");
+    return;
+  }
+
+  for(let i = 0; i < count; i++){
+
+    const randomKey = "VIP-" + Math.random().toString(36).substring(2,10).toUpperCase();
+
+    await addDoc(collection(db,"keys"),{
+      key: randomKey,
+      maxUses: maxUses || 1,
+      used: 0,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (expire * 60000)
+    });
+
+  }
+
+  alert("Đã tạo " + count + " key!");
+  loadKeys(); // hoặc load(); tùy file bạn đang dùng
+}
+
+</script>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
