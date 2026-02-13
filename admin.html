@@ -1,77 +1,38 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>ADMIN SYSTEM</title>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-
-<style>
-body{
-    margin:0;
-    background:#000;
-    font-family:Courier New;
-    color:#00ff88;
-}
-.container{
-    max-width:600px;
-    margin:20px auto;
-    padding:20px;
-    border:1px solid #00ff88;
-    box-shadow:0 0 20px #00ff88;
-}
-input,button{
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-    background:#000;
-    border:1px solid #00ff88;
-    color:#00ff88;
-}
-button:hover{
-    background:#00ff88;
-    color:#000;
-}
-.key-box{
-    margin-top:10px;
-    padding:10px;
-    border:1px dashed #00ff88;
-}
-.hidden{display:none;}
-</style>
+  <title>Admin Panel</title>
 </head>
 <body>
 
-<div class="container" id="loginBox">
-<h2>☠ ADMIN LOGIN ☠</h2>
-<input type="password" id="adminPass" placeholder="Nhập mật khẩu admin">
-<button onclick="login()">Đăng nhập</button>
+<h2>Admin Login</h2>
+
+<div id="loginBox">
+  <input type="email" id="email" placeholder="Email"><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
 </div>
 
-<div class="container hidden" id="adminPanel">
-<h2>☠ HACKER ADMIN PANEL ☠</h2>
+<div id="adminPanel" style="display:none;">
+  <h3>Tạo Key</h3>
+  <input type="number" id="hours" placeholder="Số giờ"><br><br>
+  <input type="number" id="devices" placeholder="Số thiết bị"><br><br>
+  <button onclick="createKey()">Tạo Key</button>
 
-<label>Số giờ</label>
-<input type="number" id="hours" value="24">
+  <h3>Danh sách Key</h3>
+  <div id="keyList"></div>
 
-<label>Số thiết bị</label>
-<input type="number" id="devices" value="1">
-
-<label>Số lượng key</label>
-<input type="number" id="amount" value="1">
-
-<button onclick="createKey()">TẠO KEY</button>
-
-<h3>Danh sách key</h3>
-<div id="keyList"></div>
-
+  <br>
+  <button onclick="logout()">Đăng xuất</button>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
@@ -83,65 +44,68 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const auth = getAuth();
+const db = getFirestore();
 
-window.login = function(){
-    const pass = document.getElementById("adminPass").value;
-    if(pass === "admin123"){   // đổi mật khẩu tại đây
-        document.getElementById("loginBox").classList.add("hidden");
-        document.getElementById("adminPanel").classList.remove("hidden");
-        loadKeys();
-    }else{
-        alert("Sai mật khẩu!");
-    }
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("Đăng nhập thành công!");
+  } catch (error) {
+    alert("Sai email hoặc mật khẩu!");
+  }
+};
+
+window.logout = function() {
+  signOut(auth);
+};
+
+window.createKey = async function() {
+  const hours = document.getElementById("hours").value;
+  const devices = document.getElementById("devices").value;
+
+  const key = Math.random().toString(36).substring(2,10).toUpperCase();
+
+  await addDoc(collection(db, "keys"), {
+    key: key,
+    hours: Number(hours),
+    devices: Number(devices),
+    createdAt: new Date()
+  });
+
+  alert("Tạo key thành công: " + key);
+  loadKeys();
+};
+
+async function loadKeys() {
+  const querySnapshot = await getDocs(collection(db, "keys"));
+  const list = document.getElementById("keyList");
+  list.innerHTML = "";
+
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    list.innerHTML += `
+      <p>
+        <b>${data.key}</b> | ${data.hours} giờ | ${data.devices} thiết bị
+      </p>
+    `;
+  });
 }
 
-function randomKey(){
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let key = "KPD_";
-    for(let i=0;i<10;i++){
-        key += chars.charAt(Math.floor(Math.random()*chars.length));
-    }
-    return key;
-}
-
-window.createKey = async function(){
-    let hours = document.getElementById("hours").value;
-    let devices = document.getElementById("devices").value;
-    let amount = document.getElementById("amount").value;
-
-    for(let i=0;i<amount;i++){
-        await addDoc(collection(db,"keys"),{
-            key: randomKey(),
-            hours: Number(hours),
-            devices: Number(devices),
-            created: new Date()
-        });
-    }
-
-    alert("✔ Tạo key thành công!");
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
     loadKeys();
-}
+  } else {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("adminPanel").style.display = "none";
+  }
+});
 
-async function loadKeys(){
-    const querySnapshot = await getDocs(collection(db,"keys"));
-    let html="";
-    querySnapshot.forEach((docSnap)=>{
-        let data = docSnap.data();
-        html += `
-        <div class="key-box">
-            ${data.key} | ${data.hours}h | ${data.devices} thiết bị
-            <button onclick="deleteKey('${docSnap.id}')">Xóa</button>
-        </div>
-        `;
-    });
-    document.getElementById("keyList").innerHTML = html;
-}
-
-window.deleteKey = async function(id){
-    await deleteDoc(doc(db,"keys",id));
-    loadKeys();
-}
 </script>
 
 </body>
