@@ -2,47 +2,115 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ADMIN KEY</title>
+<title>ADMIN KEY PANEL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{
-  font-family:sans-serif;
-  background:#0f0f0f;
+  font-family:Arial;
+  background:#0f172a;
   color:white;
+  margin:0;
+}
+header{
+  background:#1e293b;
+  padding:20px;
+  font-size:22px;
   text-align:center;
+  font-weight:bold;
+}
+.menu{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:20px;
 }
 button{
-  padding:10px;
-  margin:6px;
-  border-radius:10px;
+  padding:12px;
   border:none;
-  background:#00ff99;
+  border-radius:10px;
+  background:#22c55e;
   font-weight:bold;
   cursor:pointer;
 }
-#adminPanel{
-  display:none;
+input,select{
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  margin:5px;
 }
+.box{
+  background:#1e293b;
+  margin:20px;
+  padding:20px;
+  border-radius:15px;
+}
+.keyitem{
+  background:#334155;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+}
+.hidden{display:none;}
 </style>
 </head>
 <body>
 
-<h2>🔐 ADMIN LOGIN</h2>
-<button onclick="login()">Đăng nhập Google</button>
-<button onclick="logout()">Đăng xuất</button>
+<header>🔐 ADMIN KEY PANEL</header>
 
-<div id="adminPanel">
-  <h2>🔑 ADMIN PANEL</h2>
-  <button onclick="createTestKey()">Tạo test key</button>
-  <button onclick="deleteAll()">Xóa tất cả</button>
+<div class="box" id="loginBox">
+<h3>Đăng nhập Admin</h3>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+</div>
+
+<div id="adminBox" class="hidden">
+
+<div class="box">
+<h3>Tạo Key</h3>
+<input id="newKey" placeholder="Nhập key hoặc để trống random">
+<input id="expireHours" type="number" placeholder="Số giờ">
+<input id="limitUse" type="number" placeholder="Giới hạn lượt dùng">
+<button onclick="createKey()">Tạo Key</button>
+</div>
+
+<div class="box">
+<h3>Tạo Key Hàng Loạt</h3>
+<input id="prefix" placeholder="Kí tự đầu (VD: VIP-)">
+<input id="bulkHours" type="number" placeholder="Số giờ">
+<input id="bulkAmount" type="number" placeholder="Số lượng key">
+<button onclick="createBulk()">Tạo Hàng Loạt</button>
+</div>
+
+<div class="box">
+<button onclick="filterType='all';loadKeys()">Tất cả</button>
+<button onclick="filterType='unused';loadKeys()">Chưa dùng</button>
+<button onclick="filterType='used';loadKeys()">Đã dùng</button>
+<button onclick="deleteUsed()">Xóa tất cả key đã dùng</button>
+<button onclick="deleteAll()">Xóa tất cả</button>
+</div>
+
+<div class="box">
+<h3>Danh sách Key</h3>
+<div id="keyList"></div>
+<button id="toggleBtn" onclick="toggleShow()">Xem thêm</button>
+</div>
+
+<div class="box">
+<h3>Thống kê</h3>
+<p>Tổng key: <span id="totalKeys">0</span></p>
+<p>Tổng lượt dùng: <span id="totalUses">0</span></p>
+</div>
+
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig = { 
+const firebaseConfig = {
   apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
   authDomain: "kephandienkey-fbee7.firebaseapp.com",
   projectId: "kephandienkey-fbee7",
@@ -54,56 +122,118 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
-const ADMIN_EMAILS = [
-  "admin1@gmail.com",
-  "admin2@gmail.com"
-];
+let showAll=false;
+let filterType="all";
 
-window.login = async function(){
-  try{
-    await signInWithPopup(auth, provider);
-  }catch(e){
-    alert("Lỗi đăng nhập");
-  }
+window.login=async()=>{
+  await signInWithEmailAndPassword(auth,
+    email.value,password.value);
 }
 
-window.logout = async function(){
-  await signOut(auth);
-  location.reload();
-}
-
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth,user=>{
   if(user){
+    loginBox.style.display="none";
+    adminBox.classList.remove("hidden");
+    loadKeys();
+  }
+})
 
-    if(!ADMIN_EMAILS.includes(user.email)){
-      alert("Không có quyền truy cập!");
-      logout();
+function randomKey(prefix="KEY-"){
+  return prefix+Math.random().toString(36)
+  .substring(2,8).toUpperCase();
+}
+
+window.createKey=async()=>{
+  let key=newKey.value||randomKey();
+  let expire=Date.now()+expireHours.value*3600000;
+  await addDoc(collection(db,"keys"),{
+    key,
+    expire,
+    limit:parseInt(limitUse.value)||1,
+    used:0
+  });
+  alert("Tạo thành công");
+  loadKeys();
+}
+
+window.createBulk=async()=>{
+  for(let i=0;i<bulkAmount.value;i++){
+    await addDoc(collection(db,"keys"),{
+      key:randomKey(prefix.value||"KEY-"),
+      expire:Date.now()+bulkHours.value*3600000,
+      limit:1,
+      used:0
+    });
+  }
+  alert("Tạo hàng loạt xong");
+  loadKeys();
+}
+
+window.loadKeys=async()=>{
+  keyList.innerHTML="";
+  let totalK=0,totalU=0;
+  const snap=await getDocs(collection(db,"keys"));
+  let arr=[];
+  snap.forEach(d=>{
+    let data=d.data();
+    if(Date.now()>data.expire){
+      deleteDoc(doc(db,"keys",d.id));
       return;
     }
-
-    document.getElementById("adminPanel").style.display="block";
-  }
-});
-
-window.createTestKey = async function(){
-  await addDoc(collection(db,"keys"),{
-    key:"TEST-"+Math.floor(Math.random()*99999),
-    expire:new Date(Date.now()+3600000),
-    limit:1,
-    get:0
+    if(filterType=="unused" && data.used>0)return;
+    if(filterType=="used" && data.used==0)return;
+    arr.push({...data,id:d.id});
   });
-  alert("Đã tạo test key");
+
+  arr.sort((a,b)=>b.expire-a.expire);
+
+  document.getElementById("totalKeys").innerText=arr.length;
+
+  arr.forEach((k,i)=>{
+    totalU+=k.used||0;
+    if(!showAll && i>=2)return;
+    let div=document.createElement("div");
+    div.className="keyitem";
+    let remain=Math.floor((k.expire-Date.now())/3600000);
+    div.innerHTML=
+      `🔑 ${k.key}
+       <br>⏳ Còn: ${remain} giờ
+       <br>🔥 Lượt dùng: ${k.used}/${k.limit}
+       <br><button onclick="deleteOne('${k.id}')">Xóa</button>`;
+    keyList.appendChild(div);
+  });
+
+  document.getElementById("totalUses").innerText=totalU;
 }
 
-window.deleteAll = async function(){
-  const snapshot=await getDocs(collection(db,"keys"));
-  for(const docSnap of snapshot.docs){
-    await deleteDoc(doc(db,"keys",docSnap.id));
-  }
-  alert("Đã xóa");
+window.deleteOne=async(id)=>{
+  await deleteDoc(doc(db,"keys",id));
+  loadKeys();
 }
+
+window.deleteAll=async()=>{
+  const snap=await getDocs(collection(db,"keys"));
+  snap.forEach(d=>deleteDoc(doc(db,"keys",d.id)));
+  loadKeys();
+}
+
+window.deleteUsed=async()=>{
+  const snap=await getDocs(collection(db,"keys"));
+  snap.forEach(d=>{
+    if(d.data().used>0)
+      deleteDoc(doc(db,"keys",d.id));
+  });
+  loadKeys();
+}
+
+window.toggleShow=()=>{
+  showAll=!showAll;
+  toggleBtn.innerText=showAll?"Thu gọn":"Xem thêm";
+  loadKeys();
+}
+
+setInterval(loadKeys,60000);
 
 </script>
 </body>
