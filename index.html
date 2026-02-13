@@ -40,7 +40,7 @@ canvas{
   border-radius:20px;
   backdrop-filter: blur(10px);
   background: rgba(0,0,0,0.6);
-  width:300px;
+  width:320px;
 }
 
 .rainbow-text{
@@ -82,10 +82,15 @@ button{
 }
 
 .thanks{
-  margin-top:10px;
-  font-size:16px;
-  color:#00ffcc;
+  margin-top:12px;
+  font-size:18px;
   font-weight:bold;
+  animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow{
+  from { color:#00ffcc; }
+  to { color:#ff00ff; }
 }
 </style>
 </head>
@@ -106,18 +111,29 @@ button{
   </div>
 
   <div id="keyArea" class="hidden">
-    <div class="thanks">❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ ❤️</div>
+
+    <div class="thanks">
+      ❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ TUI GÓI MÌ 🍜 ❤️
+    </div>
+
     <button onclick="generateNewKey()">GET KEY</button>
+
     <div id="key"></div>
     <div id="countdown"></div>
+
     <button onclick="copyKey()">COPY KEY</button>
+
   </div>
 
 </div>
 
+<!-- ADMIN ẨN -->
+<div style="position:fixed;bottom:10px;width:100%;text-align:center;z-index:5;">
+  <small style="opacity:0.2;cursor:pointer;" onclick="openAdmin()">ADMIN</small>
+</div>
+
 <script type="module">
 
-// ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -133,7 +149,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== LINK =====
 const YEULINK = "https://yeulink.com/kephandienkey333";
 
 const params = new URLSearchParams(window.location.search);
@@ -155,7 +170,6 @@ if(done === "1"){
   };
 }
 
-// ===== TẠO KEY =====
 function generateKey(){
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -165,7 +179,6 @@ function generateKey(){
   return "KPD_" + result.match(/.{1,4}/g).join("-");
 }
 
-// ===== TẠO KEY MỚI =====
 window.generateNewKey = async function(){
 
   if(sessionStorage.getItem("canGenerate") !== "true"){
@@ -186,9 +199,7 @@ window.generateNewKey = async function(){
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
-// ===== HIỂN THỊ KEY =====
 async function showKey(){
-
   const docRef = doc(db, "keys", deviceID);
   const docSnap = await getDoc(docRef);
 
@@ -220,11 +231,20 @@ window.copyKey = function(){
   alert("Đã copy key!");
 }
 
+window.openAdmin = function(){
+  const pass = prompt("Nhập mật khẩu admin:");
+  if(pass === "admin123"){
+    window.location.href = "admin.html";
+  }else{
+    alert("Sai mật khẩu!");
+  }
+}
+
 if(done === "1"){
   showKey();
 }
 
-// ===== HẠT BAY =====
+// HẠT BAY
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
