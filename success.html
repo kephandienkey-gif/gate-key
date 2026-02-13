@@ -12,7 +12,7 @@ body{
   padding-top:80px;
 }
 .keyBox{
-  font-size:40px;
+  font-size:42px;
   font-weight:bold;
   margin:30px;
   color:#00ff00;
@@ -30,7 +30,7 @@ button{
 <body>
 
 <h2>cảm ơn vì đã vượt key🫰🏻🫵🏻🔑</h2>
-<div class="keyBox" id="keyBox">Đang lấy key...</div>
+<div class="keyBox" id="keyBox">Đang kiểm tra...</div>
 <button onclick="copyKey()">COPY KEY</button>
 
 <script type="module">
@@ -50,47 +50,56 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let today=new Date().toLocaleDateString();
-let count=localStorage.getItem("count_"+today)||0;
+let today = new Date().toISOString().slice(0,10);
+let count = parseInt(localStorage.getItem("limit_"+today) || "0");
 
-if(count>=2){
-document.getElementById("keyBox").innerText="Bạn đã vượt 2 lần hôm nay!";
-throw "";
+if (count >= 2) {
+  document.getElementById("keyBox").innerText = "Bạn đã nhận 2 key hôm nay!";
+} else {
+  getKey();
 }
 
-async function getKey(){
-const snap=await getDocs(collection(db,"keys"));
-let available=[];
+async function getKey() {
 
-snap.forEach(d=>{
-let data=d.data();
-if((data.used||0)<data.limit)
-available.push({id:d.id,...data});
-});
+  try {
 
-if(available.length==0){
-document.getElementById("keyBox").innerText="Hết key!";
-return;
+    const snap = await getDocs(collection(db,"keys"));
+    let available = [];
+
+    snap.forEach(d=>{
+      let data = d.data();
+      if ((data.used || 0) < data.limit) {
+        available.push({id:d.id,...data});
+      }
+    });
+
+    if (available.length === 0) {
+      document.getElementById("keyBox").innerText = "Hết key!";
+      return;
+    }
+
+    let random = available[Math.floor(Math.random()*available.length)];
+
+    await updateDoc(doc(db,"keys",random.id),{
+      used:(random.used||0)+1
+    });
+
+    localStorage.setItem("limit_"+today, count+1);
+
+    window.currentKey = random.key;
+    document.getElementById("keyBox").innerText = random.key;
+
+  } catch(err){
+    document.getElementById("keyBox").innerText = "Lỗi kết nối Firebase!";
+    console.log(err);
+  }
 }
 
-let random=available[Math.floor(Math.random()*available.length)];
-
-await updateDoc(doc(db,"keys",random.id),{
-used:(random.used||0)+1
-});
-
-localStorage.setItem("count_"+today,parseInt(count)+1);
-
-document.getElementById("keyBox").innerText=random.key;
-window.currentKey=random.key;
-}
-
-getKey();
-
-window.copyKey=function(){
-navigator.clipboard.writeText(window.currentKey);
-alert("Đã copy!");
-window.location.href="index.html";
+window.copyKey = function(){
+  if(!window.currentKey) return;
+  navigator.clipboard.writeText(window.currentKey);
+  alert("Đã copy!");
+  window.location.href = "./index.html";
 }
 
 </script>
