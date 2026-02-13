@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Nhập Key</title>
+<style>
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0f172a;
+  font-family:Arial;
+  color:white;
+}
+.box{
+  background:#1e293b;
+  padding:25px;
+  border-radius:15px;
+  width:300px;
+  text-align:center;
+}
+input{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  margin-top:10px;
+}
+button{
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:white;
+  width:100%;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>🔑 Nhập Key</h2>
+<input type="text" id="keyInput" placeholder="Nhập key">
+<button onclick="checkKey()">Xác nhận</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.checkKey = async function(){
+
+  const userKey = document.getElementById("keyInput").value.trim();
+  const snapshot = await getDocs(collection(db,"keys"));
+
+  let found = false;
+
+  for(const docItem of snapshot.docs){
+    const data = docItem.data();
+
+    if(data.key === userKey){
+
+      const now = Date.now();
+      const expireTime = data.createdAt + (data.time * 60 * 60 * 1000);
+
+      if(now > expireTime){
+        await deleteDoc(doc(db,"keys",docItem.id));
+        alert("❌ Key đã hết hạn và đã tự huỷ!");
+        return;
+      }
+
+      alert("✅ Key hợp lệ!");
+      found = true;
+      break;
+    }
+  }
+
+  if(!found){
+    alert("❌ Key không tồn tại!");
+  }
+}
+
+</script>
+
+</body>
+</html>
