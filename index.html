@@ -1,152 +1,128 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Get Key</title>
-
+<title>GET KEY</title>
 <style>
 body{
   margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
   font-family:Arial;
-  background:linear-gradient(135deg,#00c853,#64dd17);
-}
-
-.card{
-  background:rgba(0,0,0,0.65);
-  padding:25px;
-  border-radius:20px;
-  text-align:center;
-  width:320px;
-  box-shadow:0 0 25px rgba(0,0,0,0.5);
-}
-
-.card h2{
-  color:#ff5252;
-  cursor:pointer;
-  font-size:18px;
-  margin-bottom:20px;
-}
-
-.btn{
-  display:block;
-  margin:10px 0;
-  padding:10px;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:bold;
+  background:black;
   color:white;
-  background:linear-gradient(90deg,#00e5ff,#2979ff);
+  overflow:hidden;
+}
+
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:-1;
+}
+
+.container{
+  text-align:center;
+  margin-top:100px;
+}
+
+.title{
+  font-size:22px;
+  cursor:pointer;
+}
+
+button{
+  display:block;
+  width:280px;
+  margin:15px auto;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:bold;
+  background:linear-gradient(45deg,#00f5ff,#0066ff);
+  color:white;
+  cursor:pointer;
   transition:0.3s;
 }
 
-.btn:hover{
+button:hover{
   transform:scale(1.05);
-}
-
-.thanks{
-  color:yellow;
-  font-weight:bold;
-  margin-bottom:10px;
-  animation:glow 1s infinite alternate;
-}
-
-@keyframes glow{
-  from{color:#00ffff;}
-  to{color:#ff00ff;}
+  background:linear-gradient(45deg,#ff00cc,#3333ff);
 }
 </style>
 </head>
-
 <body>
 
-<div class="card">
-  <h2 id="secretAdmin">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
+<canvas id="matrix"></canvas>
 
-  <div id="mainArea">
-    <a href="https://yeulink.com/kephandienkey333" class="btn">
-      🔓 VƯỢT LINK ĐỂ LẤY KEY
-    </a>
-  </div>
+<div class="container">
 
-  <div id="afterArea" style="display:none;">
-    <div class="thanks">
-      ❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ 🍜 ❤️
-    </div>
-<button onclick="getKey()" class="btn">
-  🔑 GET KEY NGAY
-</button>
-
-<div id="resultBox" style="display:none;margin-top:15px;">
-  <div style="color:#ffeb3b;font-weight:bold;">
-    ❤️ Cảm ơn vì đã ủng hộ ❤️
-  </div>
-
-  <div id="showKey" style="
-    background:black;
-    padding:12px;
-    border-radius:8px;
-    margin:10px 0;
-    color:#00ffcc;
-    font-weight:bold;">
-  </div>
-
-  <button onclick="copyKey()" class="btn" 
-    style="background:#00c853;">
-    COPY KEY
-  </button>
+<div class="title" id="secretTitle">
+mọi người get key để ủng hộ tui gói mì 🥹
 </div>
-    
-  </div>
 
-  <a href="https://zalo.me/g/cocmne792" class="btn">
-    💬 ZALO NHÓM
-  </a>
+<button onclick="goLink()">GET KEY</button>
 
-  <a href="https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1" class="btn">
-    ▶ YOUTUBE
-  </a>
-
-  <a href="https://tiktok.com/@ghetnhanvatchinhkk" class="btn">
-    🎵 TIKTOK
-  </a>
+<button onclick="window.open('https://zalo.me/g/cocmne792')">ZALO NHÓM</button>
+<button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=JwNQ41Gx-4SD0L9i')">YOUTUBE</button>
+<button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">TIKTOK</button>
+<button onclick="window.open('https://zalo.me/84362815320')">mua hack vip🔥🫅🏻 liên hệ @kephandien</button>
 
 </div>
 
 <script>
-// Kiểm tra đã vượt link chưa
-const params = new URLSearchParams(window.location.search);
-if(params.get("done") === "1"){
-  document.getElementById("mainArea").style.display = "none";
-  document.getElementById("afterArea").style.display = "block";
+// ===== Matrix background =====
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+canvas.height=window.innerHeight;
+canvas.width=window.innerWidth;
+
+let letters="01";
+letters=letters.split("");
+
+let fontSize=14;
+let columns=canvas.width/fontSize;
+let drops=[];
+
+for(let x=0;x<columns;x++)
+drops[x]=1;
+
+function draw(){
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="#0F0";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+let text=letters[Math.floor(Math.random()*letters.length)];
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+if(drops[i]*fontSize>canvas.height&&Math.random()>0.975)
+drops[i]=0;
+drops[i]++;
+}
 }
 
-// ADMIN bí mật 7 lần
-let tapCount = 0;
-let tapTimeout;
+setInterval(draw,33);
 
-document.getElementById("secretAdmin").addEventListener("click", function(){
-    tapCount++;
-    clearTimeout(tapTimeout);
+// ===== Secret admin open =====
+let clickCount=0;
+document.getElementById("secretTitle").onclick=function(){
+clickCount++;
+if(clickCount==7){
+let pass=prompt("Nhập mật khẩu:");
+if(pass==="667788hyii"){
+window.location.href="admin.html";
+}else{
+alert("Sai mật khẩu");
+}
+clickCount=0;
+}
+}
 
-    if(tapCount >= 7){
-        const pass = prompt("Nhập mật khẩu admin:");
-        if(pass === "667788hyii"){
-            window.location.href = "admin.html";
-        }else{
-            alert("Sai mật khẩu!");
-        }
-        tapCount = 0;
-    }
-
-    tapTimeout = setTimeout(() => {
-        tapCount = 0;
-    }, 3000);
-});
+// ===== Go link =====
+function goLink(){
+window.location.href="https://yeulink.com/kephandienkeyvip";
+}
 </script>
 
 </body>
