@@ -2,16 +2,42 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ADMIN</title>
+<title>KPD ADMIN</title>
+<style>
+body{
+  background:#111;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+input,select,button{
+  margin:5px;
+  padding:8px;
+  border-radius:5px;
+  border:none;
+}
+button{
+  background:#00ff99;
+  cursor:pointer;
+}
+.keyBox{
+  background:#222;
+  margin:10px;
+  padding:10px;
+  border-radius:10px;
+}
+</style>
 </head>
 <body>
 
-<h2>ADMIN PANEL</h2>
+<h2>KPD ADMIN PANEL</h2>
 
-<input type="password" id="pass" placeholder="Mật khẩu">
-<button onclick="login()">Login</button>
+<input type="password" id="pass" placeholder="Mật khẩu admin">
+<button onclick="login()">Đăng nhập</button>
 
 <div id="panel" style="display:none;">
+
+<h3>Tạo Key</h3>
 
 <select id="type">
 <option value="FREE">FREE</option>
@@ -23,7 +49,7 @@
 
 <button onclick="createKey()">Tạo Key</button>
 
-<h3>Danh sách key</h3>
+<h3>Danh sách Key</h3>
 <div id="list"></div>
 
 </div>
@@ -34,12 +60,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "APIKEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -48,12 +74,18 @@ const db = getFirestore(app);
 window.login = function(){
   if(pass.value === "admin123"){
     panel.style.display = "block";
+    loadKeys();
   } else {
     alert("Sai mật khẩu");
   }
 }
 
 window.createKey = async function(){
+
+  if(!hours.value || !devices.value){
+    alert("Nhập đầy đủ giờ và thiết bị");
+    return;
+  }
 
   const key = "KPD_" + Math.random().toString(36).substring(2,8).toUpperCase();
   const expire = Date.now() + parseInt(hours.value) * 3600000;
@@ -66,6 +98,9 @@ window.createKey = async function(){
   });
 
   alert("Đã tạo: " + key);
+
+  hours.value="";
+  devices.value="";
   loadKeys();
 }
 
@@ -76,8 +111,10 @@ async function loadKeys(){
   query.forEach(docu=>{
     const d = docu.data();
     list.innerHTML += `
-      <div>
-      ${docu.id} | ${d.type} | ${d.maxDevices} thiết bị
+      <div class="keyBox">
+      <b>${docu.id}</b><br>
+      Loại: ${d.type}<br>
+      Thiết bị: ${d.maxDevices}<br>
       <button onclick="deleteKey('${docu.id}')">Xoá</button>
       </div>
     `;
@@ -89,8 +126,7 @@ window.deleteKey = async function(id){
   loadKeys();
 }
 
-loadKeys();
-
 </script>
+
 </body>
 </html>
