@@ -1,103 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Nhập Key</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GET KEY</title>
+
 <style>
 body{
   margin:0;
-  height:100vh;
+  font-family:Arial;
+  background:linear-gradient(135deg,#00c853,#64dd17);
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#0f172a;
-  font-family:Arial;
-  color:white;
+  height:100vh;
 }
+
 .box{
-  background:#1e293b;
-  padding:25px;
-  border-radius:15px;
-  width:300px;
+  background:#0d3b1f;
+  padding:30px;
+  width:350px;
+  border-radius:20px;
+  box-shadow:0 0 25px rgba(0,0,0,0.5);
   text-align:center;
-}
-input{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  margin-top:10px;
-}
-button{
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#22c55e;
   color:white;
+}
+
+button{
   width:100%;
+  padding:12px;
+  margin:8px 0;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  font-size:15px;
   cursor:pointer;
+  background:linear-gradient(90deg,#00bcd4,#2979ff);
+  color:white;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+#resultBox{
+  display:none;
+  margin-top:15px;
+}
+
+#showKey{
+  background:black;
+  padding:15px;
+  border-radius:10px;
+  margin:10px 0;
+  color:#00ffcc;
+  font-weight:bold;
+  font-size:18px;
 }
 </style>
 </head>
-
 <body>
 
 <div class="box">
-<h2>🔑 Nhập Key</h2>
-<input type="text" id="keyInput" placeholder="Nhập key">
-<button onclick="checkKey()">Xác nhận</button>
+  <h3>🍜 GET KEY ĐỂ ỦNG HỘ TỤI GÓI MÌ 🍜</h3>
+  <p>❤️ Cảm ơn bạn đã ủng hộ ❤️</p>
+
+  <button onclick="getKey()">🔑 GET KEY NGAY</button>
+  <button onclick="window.open('https://zalo.me','_blank')">💬 ZALO NHÓM</button>
+  <button onclick="window.open('https://youtube.com','_blank')">▶ YOUTUBE</button>
+  <button onclick="window.open('https://tiktok.com','_blank')">🎵 TIKTOK</button>
+
+  <div id="resultBox">
+      <h3 style="color:#ffeb3b;">❤️ Cảm ơn vì đã ủng hộ ❤️</h3>
+      <div id="showKey"></div>
+      <button onclick="copyKey()" style="background:#00c853;">COPY KEY</button>
+  </div>
+
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc } 
+import { getFirestore, collection, getDocs, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
-  authDomain: "kephandienkey-fbee7.firebaseapp.com",
-  projectId: "kephandienkey-fbee7",
-  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
-  messagingSenderId: "1004820527441",
-  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+const firebaseConfig = { 
+  apiKey : "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw" , 
+  authDomain : "kephandienkey-fbee7.firebaseapp.com" , 
+  projectId : "kephandienkey-fbee7" , 
+  storageBucket : "kephandienkey-fbee7.firebasestorage.app" , 
+  messagingSenderId : "1004820527441" , 
+  appId : "1:1004820527441:web:a2ffa3aefb82b99a97fb70" 
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.checkKey = async function(){
+window.getKey = async function(){
 
-  const userKey = document.getElementById("keyInput").value.trim();
   const snapshot = await getDocs(collection(db,"keys"));
-
   let found = false;
 
-  for(const docItem of snapshot.docs){
-    const data = docItem.data();
+  snapshot.forEach(async (docSnap)=>{
+    const data = docSnap.data();
 
-    if(data.key === userKey){
+    if(!found && Date.now() < data.expire){
 
-      const now = Date.now();
-      const expireTime = data.createdAt + (data.time * 60 * 60 * 1000);
-
-      if(now > expireTime){
-        await deleteDoc(doc(db,"keys",docItem.id));
-        alert("❌ Key đã hết hạn và đã tự huỷ!");
-        return;
-      }
-
-      alert("✅ Key hợp lệ!");
       found = true;
-      break;
+
+      // tăng lượt get
+      await updateDoc(doc(db,"keys",docSnap.id),{
+        get:(data.get || 0) + 1
+      });
+
+      document.getElementById("showKey").innerText = data.key;
+      document.getElementById("resultBox").style.display = "block";
     }
-  }
+  });
 
   if(!found){
-    alert("❌ Key không tồn tại!");
+    alert("Hiện không có key khả dụng!");
   }
-}
+};
+
+window.copyKey = function(){
+  const key = document.getElementById("showKey").innerText;
+  navigator.clipboard.writeText(key);
+  alert("Đã copy key!");
+};
 
 </script>
 
