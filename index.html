@@ -28,7 +28,6 @@ body{
   100% { background-position: 0% 50%; }
 }
 
-/* Hạt bay */
 canvas{
   position:fixed;
   top:0;
@@ -44,9 +43,9 @@ canvas{
   border-radius:20px;
   backdrop-filter: blur(10px);
   background: rgba(0,0,0,0.6);
-  box-shadow:0 0 30px rgba(0,0,0,0.5);
 }
 
+/* Viền RGB */
 .box::before{
   content:"";
   position:absolute;
@@ -63,20 +62,44 @@ canvas{
   100%{background-position:400%}
 }
 
+/* Chữ 7 màu */
+.rainbow-text{
+  font-size:20px;
+  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
+  background-size: 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textRGB 5s linear infinite, shake 1.5s infinite;
+}
+
+@keyframes textRGB{
+  0%{background-position:0%}
+  100%{background-position:400%}
+}
+
+/* Rung nhẹ */
+@keyframes shake{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(1px,-1px)}
+  50%{transform:translate(-1px,1px)}
+  75%{transform:translate(1px,1px)}
+  100%{transform:translate(0,0)}
+}
+
 button{
-  padding:12px 25px;
+  padding:10px 20px;
   border:none;
   border-radius:10px;
   cursor:pointer;
   font-weight:bold;
-  font-size:16px;
-  margin-top:15px;
+  font-size:14px;
+  margin-top:10px;
   background:linear-gradient(90deg,cyan,blue);
   color:white;
 }
 
 #key{
-  font-size:30px;
+  font-size:26px;
   margin-top:20px;
   letter-spacing:3px;
   font-weight:bold;
@@ -84,8 +107,15 @@ button{
 
 #countdown{
   margin-top:10px;
-  font-size:18px;
+  font-size:16px;
   color:yellow;
+}
+
+.links{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 </style>
 </head>
@@ -94,19 +124,24 @@ button{
 <canvas id="particles"></canvas>
 
 <div class="box">
-  <h2>🔥 GATE KEY SYSTEM 🔥</h2>
+  <h2 class="rainbow-text">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
+
   <button onclick="checkAccess()">GET KEY</button>
+
   <div id="key"></div>
   <div id="countdown"></div>
-  <button id="copyBtn" style="display:none;" onclick="copyKey()">COPY</button>
+  <button id="copyBtn" style="display:none;" onclick="copyKey()">COPY KEY</button>
+
+  <div class="links">
+    <button onclick="window.open('https://zalo.me/g/cocmne792')">💬 ZALO NHÓM</button>
+    <button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">▶ YOUTUBE</button>
+    <button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">🎵 TIKTOK</button>
+  </div>
 </div>
 
 <script>
-// ========= CONFIG =========
-const YEULINK_DONE = "https://yeulink.com/kephandienkey333";
-// ===========================
+const YEULINK = "https://yeulink.com/kephandienkey333";
 
-// random key
 function generateKey(){
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -116,11 +151,10 @@ function generateKey(){
   return result.match(/.{1,4}/g).join("-");
 }
 
-// check vượt link
 function checkAccess(){
   if(!document.referrer.includes("yeulink")){
     alert("Bạn chưa vượt link!");
-    window.location.href = YEULINK_DONE;
+    window.location.href = YEULINK;
     return;
   }
 
@@ -137,9 +171,7 @@ function showKey(){
   let key = localStorage.getItem("userKey");
   let expire = localStorage.getItem("expireTime");
 
-  if(!key || !expire){
-    return;
-  }
+  if(!key || !expire) return;
 
   if(Date.now() > expire){
     document.getElementById("key").innerHTML="KEY HẾT HẠN";
@@ -150,10 +182,6 @@ function showKey(){
   document.getElementById("key").innerHTML = key;
   document.getElementById("copyBtn").style.display="inline-block";
 
-  startCountdown(expire);
-}
-
-function startCountdown(expire){
   setInterval(()=>{
     let diff = expire - Date.now();
     if(diff <= 0){
@@ -164,7 +192,6 @@ function startCountdown(expire){
     let h = Math.floor(diff/1000/60/60);
     let m = Math.floor(diff/1000/60)%60;
     let s = Math.floor(diff/1000)%60;
-
     document.getElementById("countdown").innerHTML =
       "Hết hạn sau: "+h+"h "+m+"m "+s+"s";
   },1000);
@@ -178,14 +205,14 @@ function copyKey(){
 
 showKey();
 
-// ====== HẠT BAY ======
+/* Hạt bay */
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let particles = [];
-for(let i=0;i<100;i++){
+for(let i=0;i<80;i++){
   particles.push({
     x:Math.random()*canvas.width,
     y:Math.random()*canvas.height,
@@ -202,10 +229,6 @@ function draw(){
     ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
     ctx.fill();
   });
-  update();
-}
-
-function update(){
   particles.forEach(p=>{
     p.y+=p.d;
     if(p.y>canvas.height){
