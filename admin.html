@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ADMIN</title>
+</head>
+<body>
+
+<h2>ADMIN PANEL</h2>
+
+<input type="password" id="pass" placeholder="Mật khẩu">
+<button onclick="login()">Login</button>
+
+<div id="panel" style="display:none;">
+
+<select id="type">
+<option value="FREE">FREE</option>
+<option value="SUPER">SUPER</option>
+</select>
+
+<input type="number" id="hours" placeholder="Số giờ">
+<input type="number" id="devices" placeholder="Số thiết bị">
+
+<button onclick="createKey()">Tạo Key</button>
+
+<h3>Danh sách key</h3>
+<div id="list"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "APIKEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.login = function(){
+  if(pass.value === "admin123"){
+    panel.style.display = "block";
+  } else {
+    alert("Sai mật khẩu");
+  }
+}
+
+window.createKey = async function(){
+
+  const key = "KPD_" + Math.random().toString(36).substring(2,8).toUpperCase();
+  const expire = Date.now() + parseInt(hours.value) * 3600000;
+
+  await setDoc(doc(db,"keys",key),{
+    type: type.value,
+    expireAt: Timestamp.fromMillis(expire),
+    maxDevices: parseInt(devices.value),
+    usedDevices: []
+  });
+
+  alert("Đã tạo: " + key);
+  loadKeys();
+}
+
+async function loadKeys(){
+  const query = await getDocs(collection(db,"keys"));
+  list.innerHTML = "";
+
+  query.forEach(docu=>{
+    const d = docu.data();
+    list.innerHTML += `
+      <div>
+      ${docu.id} | ${d.type} | ${d.maxDevices} thiết bị
+      <button onclick="deleteKey('${docu.id}')">Xoá</button>
+      </div>
+    `;
+  });
+}
+
+window.deleteKey = async function(id){
+  await deleteDoc(doc(db,"keys",id));
+  loadKeys();
+}
+
+loadKeys();
+
+</script>
+</body>
+</html>
