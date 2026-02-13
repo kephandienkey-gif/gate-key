@@ -1,37 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel</title>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+.container{max-width:500px;margin:auto;padding:20px}
+.card{background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px}
+input{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:none;background:#334155;color:white}
+button{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;margin-top:5px}
+.btn-main{background:#3b82f6;color:white}
+.key-item{background:#334155;padding:10px;border-radius:10px;margin-bottom:10px}
+</style>
 </head>
+
 <body>
+<div class="container">
+<h2>🔐 Admin Panel</h2>
 
-<h2>Admin Login</h2>
-
-<div id="loginBox">
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
-  <button onclick="login()">Login</button>
+<div class="card">
+<h3>Tạo Key</h3>
+<input type="text" id="customKey" placeholder="Nhập key (bỏ trống = random)">
+<input type="number" id="time" placeholder="Thời gian (giờ)">
+<input type="number" id="device" placeholder="Giới hạn thiết bị">
+<button class="btn-main" onclick="createKey()">Tạo Key</button>
 </div>
 
-<div id="adminPanel" style="display:none;">
-  <h3>Tạo Key</h3>
-  <input type="number" id="hours" placeholder="Số giờ"><br><br>
-  <input type="number" id="devices" placeholder="Số thiết bị"><br><br>
-  <button onclick="createKey()">Tạo Key</button>
-
-  <h3>Danh sách Key</h3>
-  <div id="keyList"></div>
-
-  <br>
-  <button onclick="logout()">Đăng xuất</button>
+<div class="card">
+<h3>Danh sách Key</h3>
+<div id="keyList"></div>
+</div>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs }
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -44,69 +48,59 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
+const db = getFirestore(app);
 
-window.login = async function() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+const keyList = document.getElementById("keyList");
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    alert("Đăng nhập thành công!");
-  } catch (error) {
-    alert("Sai email hoặc mật khẩu!");
-  }
-};
-
-window.logout = function() {
-  signOut(auth);
-};
-
-window.createKey = async function() {
-  const hours = document.getElementById("hours").value;
-  const devices = document.getElementById("devices").value;
-
-  const key = Math.random().toString(36).substring(2,10).toUpperCase();
-
-  await addDoc(collection(db, "keys"), {
-    key: key,
-    hours: Number(hours),
-    devices: Number(devices),
-    createdAt: new Date()
-  });
-
-  alert("Tạo key thành công: " + key);
-  loadKeys();
-};
-
-async function loadKeys() {
-  const querySnapshot = await getDocs(collection(db, "keys"));
-  const list = document.getElementById("keyList");
-  list.innerHTML = "";
-
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    list.innerHTML += `
-      <p>
-        <b>${data.key}</b> | ${data.hours} giờ | ${data.devices} thiết bị
-      </p>
-    `;
-  });
+function randomKey(){
+    return Math.random().toString(36).substring(2,10).toUpperCase();
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("adminPanel").style.display = "block";
+window.createKey = async function(){
+    const customKey = document.getElementById("customKey").value;
+    const time = document.getElementById("time").value;
+    const device = document.getElementById("device").value;
+
+    const finalKey = customKey ? customKey : randomKey();
+
+    await addDoc(collection(db,"keys"),{
+        key: finalKey,
+        time: Number(time),
+        device: Number(device),
+        createdAt: Date.now()
+    });
+
+    alert("Tạo key thành công!");
     loadKeys();
-  } else {
-    document.getElementById("loginBox").style.display = "block";
-    document.getElementById("adminPanel").style.display = "none";
-  }
-});
+}
+
+async function loadKeys(){
+    keyList.innerHTML="";
+    const snapshot = await getDocs(collection(db,"keys"));
+
+    snapshot.forEach((docItem)=>{
+        const data = docItem.data();
+        const div = document.createElement("div");
+        div.className="key-item";
+
+        div.innerHTML=`
+        <b>${data.key}</b><br>
+        ${data.time} giờ | ${data.device} thiết bị
+        <button onclick="deleteKey('${docItem.id}')">Xoá</button>
+        `;
+
+        keyList.appendChild(div);
+    });
+}
+
+window.deleteKey = async function(id){
+    await deleteDoc(doc(db,"keys",id));
+    alert("Đã xoá key");
+    loadKeys();
+}
+
+loadKeys();
 
 </script>
-
 </body>
 </html>
