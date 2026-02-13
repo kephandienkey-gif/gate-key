@@ -14,18 +14,15 @@ body{
   font-family:monospace;
   color:white;
   overflow:hidden;
-
-  background: linear-gradient(-45deg,
-    red, orange, yellow, green, cyan, blue, violet
-  );
-  background-size: 400% 400%;
+  background: linear-gradient(-45deg,red,orange,yellow,green,cyan,blue,violet);
+  background-size:400% 400%;
   animation: rainbowBG 10s ease infinite;
 }
 
-@keyframes rainbowBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes rainbowBG{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
 }
 
 canvas{
@@ -43,31 +40,16 @@ canvas{
   border-radius:20px;
   backdrop-filter: blur(10px);
   background: rgba(0,0,0,0.6);
-}
-
-.box::before{
-  content:"";
-  position:absolute;
-  inset:-3px;
-  border-radius:20px;
-  background: linear-gradient(45deg,red,orange,yellow,green,cyan,blue,violet);
-  background-size:400%;
-  animation: borderRGB 6s linear infinite;
-  z-index:-1;
-}
-
-@keyframes borderRGB{
-  0%{background-position:0%}
-  100%{background-position:400%}
+  width:300px;
 }
 
 .rainbow-text{
-  font-size:20px;
+  font-size:18px;
   background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
-  background-size: 400%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textRGB 5s linear infinite, shake 1.5s infinite;
+  background-size:400%;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:textRGB 5s linear infinite;
 }
 
 @keyframes textRGB{
@@ -75,44 +57,35 @@ canvas{
   100%{background-position:400%}
 }
 
-@keyframes shake{
-  0%{transform:translate(0,0)}
-  25%{transform:translate(1px,-1px)}
-  50%{transform:translate(-1px,1px)}
-  75%{transform:translate(1px,1px)}
-  100%{transform:translate(0,0)}
-}
-
 button{
-  padding:10px 20px;
+  padding:10px;
   border:none;
   border-radius:10px;
   cursor:pointer;
   font-weight:bold;
-  font-size:14px;
   margin-top:10px;
   background:linear-gradient(90deg,cyan,blue);
   color:white;
+  width:100%;
 }
 
-#key{
-  font-size:26px;
-  margin-top:20px;
-  letter-spacing:3px;
-  font-weight:bold;
-}
+#key{ font-size:22px; margin-top:15px; word-break:break-all; }
+#countdown{ margin-top:8px; color:yellow; font-size:14px; }
 
-#countdown{
-  margin-top:10px;
-  font-size:16px;
-  color:yellow;
-}
+.hidden{ display:none; }
 
 .links{
-  margin-top:20px;
+  margin-top:15px;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
+}
+
+.thanks{
+  margin-top:10px;
+  font-size:16px;
+  color:#00ffcc;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -121,23 +94,45 @@ button{
 <canvas id="particles"></canvas>
 
 <div class="box">
+
   <h2 class="rainbow-text">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
 
-  <button onclick="checkAccess()">GET KEY</button>
-
-  <div id="key"></div>
-  <div id="countdown"></div>
-  <button id="copyBtn" style="display:none;" onclick="copyKey()">COPY KEY</button>
+  <button id="mainBtn">VƯỢT LINK ĐỂ LẤY KEY</button>
 
   <div class="links">
     <button onclick="window.open('https://zalo.me/g/cocmne792')">💬 ZALO NHÓM</button>
     <button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">▶ YOUTUBE</button>
     <button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">🎵 TIKTOK</button>
   </div>
+
+  <div id="keyArea" class="hidden">
+    <div class="thanks">❤️ CẢM ƠN BẠN ĐÃ ỦNG HỘ ❤️</div>
+    <button onclick="generateNewKey()">GET KEY</button>
+    <div id="key"></div>
+    <div id="countdown"></div>
+    <button onclick="copyKey()">COPY KEY</button>
+  </div>
+
 </div>
 
 <script>
 const YEULINK = "https://yeulink.com/kephandienkey333";
+
+const params = new URLSearchParams(window.location.search);
+const done = params.get("done");
+
+const mainBtn = document.getElementById("mainBtn");
+const keyArea = document.getElementById("keyArea");
+
+if(done === "1"){
+  mainBtn.classList.add("hidden");
+  keyArea.classList.remove("hidden");
+  sessionStorage.setItem("canGenerate","true");
+}else{
+  mainBtn.onclick = () => {
+    window.location.href = YEULINK;
+  };
+}
 
 function generateKey(){
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -148,12 +143,10 @@ function generateKey(){
   return "KPD_" + result.match(/.{1,4}/g).join("-");
 }
 
-function checkAccess(){
-  const params = new URLSearchParams(window.location.search);
+function generateNewKey(){
 
-  if(params.get("done") !== "1"){
-    alert("Bạn chưa vượt link!");
-    window.location.href = YEULINK;
+  if(sessionStorage.getItem("canGenerate") !== "true"){
+    alert("Bạn cần vượt link để lấy key mới!");
     return;
   }
 
@@ -163,7 +156,11 @@ function checkAccess(){
   localStorage.setItem("userKey", newKey);
   localStorage.setItem("expireTime", expire);
 
+  sessionStorage.removeItem("canGenerate");
+
   showKey();
+
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 function showKey(){
@@ -172,14 +169,7 @@ function showKey(){
 
   if(!key || !expire) return;
 
-  if(Date.now() > expire){
-    document.getElementById("key").innerHTML="KEY HẾT HẠN";
-    localStorage.clear();
-    return;
-  }
-
   document.getElementById("key").innerHTML = key;
-  document.getElementById("copyBtn").style.display="inline-block";
 
   setInterval(()=>{
     let diff = expire - Date.now();
@@ -202,7 +192,9 @@ function copyKey(){
   alert("Đã copy key!");
 }
 
-showKey();
+if(done === "1"){
+  showKey();
+}
 
 /* Hạt bay */
 const canvas = document.getElementById("particles");
@@ -210,8 +202,8 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let particles = [];
-for(let i=0;i<80;i++){
+let particles=[];
+for(let i=0;i<60;i++){
   particles.push({
     x:Math.random()*canvas.width,
     y:Math.random()*canvas.height,
@@ -227,8 +219,6 @@ function draw(){
     ctx.beginPath();
     ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
     ctx.fill();
-  });
-  particles.forEach(p=>{
     p.y+=p.d;
     if(p.y>canvas.height){
       p.y=0;
