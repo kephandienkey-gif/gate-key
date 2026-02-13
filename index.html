@@ -145,7 +145,7 @@ function generateKey(){
   for(let i=0;i<16;i++){
     result += chars.charAt(Math.floor(Math.random()*chars.length));
   }
-  return result.match(/.{1,4}/g).join("-");
+  return "KPD_" + result.match(/.{1,4}/g).join("-");
 }
 
 function checkAccess(){
