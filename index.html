@@ -2,112 +2,137 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>GET KEY 24H</title>
+<title>GET KEY</title>
+
 <style>
-*{box-sizing:border-box;font-family:Consolas,monospace}
 body{
-  margin:0;height:100vh;display:flex;justify-content:center;align-items:center;
-  background:radial-gradient(circle at top,#003a2f,#000);
-  color:#00ffcc;
+    margin:0;
+    background: linear-gradient(135deg,#0f0f0f,#1a1a1a,#000);
+    font-family: monospace;
+    color:#0f0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
+
 .box{
-  background:#001812;
-  border:2px solid #00ffcc;
-  box-shadow:0 0 30px #00ffcc;
-  padding:25px;
-  width:320px;
-  text-align:center;
-  border-radius:10px;
+    background:#111;
+    padding:40px;
+    border-radius:20px;
+    box-shadow:0 0 40px #00ffcc;
+    width:420px;
+    text-align:center;
 }
-h2{
-  margin:0 0 10px;
-  font-size:16px;
-  min-height:20px;
+
+h1{
+    font-size:28px;
+    margin-bottom:20px;
+    text-shadow:0 0 10px #00ffcc;
 }
-.key{
-  font-size:26px;
-  font-weight:bold;
-  margin:15px 0;
-  color:#7CFF00;
-  text-shadow:0 0 10px #7CFF00;
-  word-break:break-all;
+
+button{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
 }
-button,a{
-  display:block;
-  width:100%;
-  margin:8px 0;
-  padding:10px;
-  border:none;
-  border-radius:6px;
-  color:#fff;
-  font-weight:bold;
-  text-decoration:none;
-  cursor:pointer;
+
+.mainbtn{
+    background:linear-gradient(45deg,#00ffcc,#00ff66);
 }
-.get{background:#00ffcc;color:#000}
-.copy{background:#222}
-.zalo{background:#0068ff}
-.yt{background:#ff0000}
-.tt{background:#000}
-small{opacity:.7}
+
+.linkbtn{
+    background:linear-gradient(45deg,#ff00cc,#9900ff);
+    color:white;
+}
+
+button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 15px #00ffcc;
+}
+
+.keybox{
+    margin-top:20px;
+    font-size:24px;
+    word-break:break-all;
+}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-  <h2 id="type"></h2>
 
-  <button class="get" onclick="getKey()">GET KEY 🔑</button>
+<h1>GET KEY ỦNG HỘ TUI GÓI MÌ ĐÊ</h1>
 
-  <div id="keyBox" style="display:none">
-    <div class="key" id="key"></div>
-    <button class="copy" onclick="copyKey()">COPY KEY</button>
-    <small>⏳ Key có hiệu lực 24 giờ</small>
-  </div>
+<button class="mainbtn" onclick="goLink()">GET KEY 🔑</button>
 
-  <a class="zalo" href="https://zalo.me/g/cocmne792" target="_blank">Nhóm Zalo</a>
-  <a class="yt" href="https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1" target="_blank">YouTube</a>
-  <a class="tt" href="https://tiktok.com/@ghetnhanvatchinhkk" target="_blank">TikTok</a>
+<button class="linkbtn" onclick="window.open('https://zalo.me/g/cocmne792')">ZALO</button>
+<button class="linkbtn" onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">YOUTUBE</button>
+<button class="linkbtn" onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">TIKTOK</button>
+
+<div class="keybox" id="keybox"></div>
+<button id="copybtn" style="display:none;" onclick="copyKey()">COPY KEY</button>
+
 </div>
 
 <script>
-/* chữ gõ hacker */
-const text="GET KEY – ỦNG HỘ TUI GÓI MÌ ĐÊ 🍜";
-let i=0;
-setInterval(()=>{
-  document.getElementById("type").textContent=text.slice(0,i++);
-  if(i>text.length)i=0;
-},80);
 
-/* tạo key */
-function genKey(){
-  return "kpd_"+Math.random().toString(36).substring(2,10).toUpperCase();
+const yeulink = "https://yeulink.com/kephandienkey333";
+
+function goLink(){
+    window.location.href = yeulink;
 }
 
-function getKey(){
-  let data=JSON.parse(localStorage.getItem("userKey"));
-  let now=Date.now();
-
-  if(data && now<data.expire){
-    showKey(data.key);
-    return;
-  }
-
-  let key=genKey();
-  let expire=now+24*60*60*1000;
-  localStorage.setItem("userKey",JSON.stringify({key,expire}));
-  showKey(key);
+function generateKey(){
+    return "KEY-" + Math.random().toString(36).substring(2,10).toUpperCase();
 }
 
-function showKey(k){
-  document.getElementById("key").textContent=k;
-  document.getElementById("keyBox").style.display="block";
+function showKey(key){
+    document.getElementById("keybox").innerHTML = key;
+    document.getElementById("copybtn").style.display="block";
 }
 
 function copyKey(){
-  navigator.clipboard.writeText(document.getElementById("key").textContent);
-  alert("Đã copy key!");
+    let text = document.getElementById("keybox").innerText;
+    navigator.clipboard.writeText(text);
+    alert("Đã copy key!");
 }
+
+function checkKey(){
+
+    let url = new URL(window.location.href);
+
+    if(url.searchParams.get("done")==="1"){
+
+        let newKey = generateKey();
+        let expire = Date.now() + 24*60*60*1000;
+
+        localStorage.setItem("user_key",newKey);
+        localStorage.setItem("expire_time",expire);
+
+        showKey(newKey);
+
+        window.history.replaceState({},document.title,window.location.pathname);
+        return;
+    }
+
+    let savedKey = localStorage.getItem("user_key");
+    let expireTime = localStorage.getItem("expire_time");
+
+    if(savedKey && expireTime && Date.now() < expireTime){
+        showKey(savedKey);
+    }
+
+}
+
+checkKey();
+
 </script>
 
 </body>
