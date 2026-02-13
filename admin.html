@@ -2,221 +2,171 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
-<style>
-body{
-  background:#111;
-  color:white;
-  font-family:sans-serif;
-  margin:0;
-  padding:20px;
-}
-.box{
-  max-width:500px;
-  margin:auto;
-  background:#1c1c1c;
-  padding:20px;
-  border-radius:12px;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border:none;
-  border-radius:6px;
-}
-button{
-  padding:10px;
-  margin:5px 0;
-  width:100%;
-  border:none;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.create{background:#00ffcc;}
-.random{background:#ffcc00;}
-.bulk{background:#00aaff;}
-.logout{background:#ff4444;}
-.keyItem{
-  background:#222;
-  padding:10px;
-  margin:8px 0;
-  border-radius:8px;
-}
-</style>
-</head>
-<body>
-
-<div class="box" id="loginBox">
-  <h2>Đăng nhập Admin</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
-
-<div class="box" id="adminBox" style="display:none;">
-
-  <h3>Thống kê</h3>
-  Tổng key: <span id="totalKeys">0</span><br>
-  Tổng lượt get: <span id="totalGet">0</span>
-
-  <hr>
-
-  <h3>Tạo key thủ công</h3>
-  <input type="text" id="newKey" placeholder="Nhập key (để trống sẽ random)">
-  <input type="number" id="expireHours" placeholder="Hết hạn (giờ)">
-  <button class="create" onclick="createKey()">Tạo Key</button>
-
-  <h3>Tạo key hàng loạt</h3>
-  <input type="number" id="bulkCount" placeholder="Số lượng key">
-  <input type="number" id="bulkUses" placeholder="Số lượt mỗi key">
-  <input type="number" id="bulkExpire" placeholder="Hết hạn (giờ)">
-  <button class="bulk" onclick="createBulk()">Tạo hàng loạt</button>
-
-  <h3>Danh sách key</h3>
-  <div id="keyList"></div>
-
-  <button class="logout" onclick="logout()">Đăng xuất</button>
-
-</div>
-
+<title>ADMIN PANEL</title>
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getFirestore, collection, addDoc, getDocs, deleteDoc, 
+  doc, updateDoc, getDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
-  authDomain: "kephandienkey-fbee7.firebaseapp.com",
-  projectId: "kephandienkey-fbee7",
-  storageBucket: "kephandienkey-fbee7.appspot.com",
-  messagingSenderId: "1004820527441",
-  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+import { 
+  getAuth, onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = { 
+  apiKey : "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw" , 
+  authDomain : "kephandienkey-fbee7.firebaseapp.com" , 
+  projectId : "kephandienkey-fbee7" , 
+  storageBucket : "kephandienkey-fbee7.firebasestorage.app" , 
+  messagingSenderId : "1004820527441" , 
+  appId : "1:1004820527441:web:a2ffa3aefb82b99a97fb70" 
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const loginBox = document.getElementById("loginBox");
-const adminBox = document.getElementById("adminBox");
-const keyList = document.getElementById("keyList");
-const totalKeysEl = document.getElementById("totalKeys");
-const totalGetEl = document.getElementById("totalGet");
+const ADMIN_EMAIL = "kephandienkey@gmail.com";
 
-function randomKey(){
-  return "VIP-" + Math.random().toString(36).substring(2,10).toUpperCase();
-}
-
-window.login = async function(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  try{
-    await signInWithEmailAndPassword(auth,email,password);
-    alert("Đăng nhập thành công");
-  }catch{
-    alert("Sai tài khoản");
-  }
-}
-
-onAuthStateChanged(auth,(user)=>{
-  if(user){
-    loginBox.style.display="none";
-    adminBox.style.display="block";
+onAuthStateChanged(auth, (user) => {
+  if (!user || user.email !== ADMIN_EMAIL) {
+    alert("Không phải admin!");
+    window.location.href = "/";
+  } else {
     loadKeys();
-  }else{
-    loginBox.style.display="block";
-    adminBox.style.display="none";
+    loadStats();
   }
 });
 
-window.createKey = async function(){
-  let key = document.getElementById("newKey").value;
-  const hours = parseInt(document.getElementById("expireHours").value);
+function randomKey() {
+  return "KEY-" + Math.random().toString(36).substring(2,10).toUpperCase();
+}
 
-  if(!hours){ alert("Nhập giờ hết hạn"); return; }
-  if(!key) key = randomKey();
+window.createKey = async function() {
+  const customKey = document.getElementById("customKey").value.trim();
+  const days = parseInt(document.getElementById("days").value);
 
-  await addDoc(collection(db,"keys"),{
-    key:key,
-    maxUses:1,
-    used:0,
-    createdAt:Date.now(),
-    expiresAt:Date.now() + hours*60*60*1000
+  const keyValue = customKey || randomKey();
+
+  const expireDate = new Date();
+  expireDate.setDate(expireDate.getDate() + days);
+
+  await addDoc(collection(db, "keys"), {
+    key: keyValue,
+    expire: expireDate.getTime(),
+    used: 0
   });
 
-  alert("Tạo key thành công");
+  alert("Tạo key thành công!");
+  document.getElementById("customKey").value = "";
   loadKeys();
-}
+  loadStats();
+};
 
-window.createBulk = async function(){
-
-  const count = parseInt(document.getElementById("bulkCount").value);
-  const uses = parseInt(document.getElementById("bulkUses").value);
-  const hours = parseInt(document.getElementById("bulkExpire").value);
-
-  if(!count || count<=0){ alert("Nhập số lượng"); return; }
-
-  for(let i=0;i<count;i++){
-    await addDoc(collection(db,"keys"),{
-      key: randomKey(),
-      maxUses: uses || 1,
-      used:0,
-      createdAt:Date.now(),
-      expiresAt:Date.now() + hours*60*60*1000
-    });
-  }
-
-  alert("Đã tạo "+count+" key");
+window.deleteKey = async function(id) {
+  await deleteDoc(doc(db, "keys", id));
   loadKeys();
-}
+  loadStats();
+};
 
-async function loadKeys(){
-  keyList.innerHTML="";
-  let totalKeys=0;
-  let totalGet=0;
+window.deleteAllKeys = async function () {
+  if (!confirm("XÓA TOÀN BỘ KEY?")) return;
 
-  const snapshot = await getDocs(collection(db,"keys"));
+  const snapshot = await getDocs(collection(db, "keys"));
+  const promises = [];
 
-  snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
+  snapshot.forEach((d) => {
+    promises.push(deleteDoc(doc(db, "keys", d.id)));
+  });
 
-    if(Date.now()>data.expiresAt){
-      deleteDoc(doc(db,"keys",docSnap.id));
-      return;
-    }
+  await Promise.all(promises);
+  alert("Đã xóa tất cả key!");
+  loadKeys();
+  loadStats();
+};
 
-    totalKeys++;
-    totalGet += data.used || 0;
+async function loadKeys() {
+  const snapshot = await getDocs(collection(db, "keys"));
+  const container = document.getElementById("keyList");
+  container.innerHTML = "";
 
-    const div = document.createElement("div");
-    div.className="keyItem";
-    div.innerHTML = `
-      🔑 ${data.key}<br>
-      ⏳ ${new Date(data.expiresAt).toLocaleString()}<br>
-      🔥 ${data.used || 0}/${data.maxUses}
-      <br>
-      <button onclick="deleteKey('${docSnap.id}')">Xóa</button>
+  snapshot.forEach((d) => {
+    const data = d.data();
+    container.innerHTML += `
+      <div class="card">
+        <b>${data.key}</b><br>
+        Hết hạn: ${new Date(data.expire).toLocaleString()}<br>
+        Lượt get: ${data.used}<br>
+        <button onclick="deleteKey('${d.id}')">Xóa</button>
+      </div>
     `;
-    keyList.appendChild(div);
   });
-
-  totalKeysEl.innerText = totalKeys;
-  totalGetEl.innerText = totalGet;
 }
 
-window.deleteKey = async function(id){
-  await deleteDoc(doc(db,"keys",id));
-  loadKeys();
-}
-
-window.logout = async function(){
-  await signOut(auth);
+async function loadStats() {
+  const snapshot = await getDocs(collection(db, "keys"));
+  document.getElementById("totalKeys").innerText = snapshot.size;
 }
 
 </script>
+
+<style>
+body{
+  background:#111;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+.panel{
+  margin:20px auto;
+  width:400px;
+  padding:20px;
+  background:#1e1e1e;
+  border-radius:15px;
+}
+input,button{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#00bcd4;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+.card{
+  background:#2a2a2a;
+  padding:15px;
+  margin:10px;
+  border-radius:10px;
+}
+.danger{
+  background:red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+  <h2>ADMIN PANEL</h2>
+
+  <p>Tổng số key: <b id="totalKeys">0</b></p>
+
+  <input type="text" id="customKey" placeholder="Nhập key (để trống = random)">
+  <br>
+  <input type="number" id="days" placeholder="Số ngày hết hạn" value="1">
+  <br>
+  <button onclick="createKey()">Tạo Key</button>
+  <button class="danger" onclick="deleteAllKeys()">Xóa ALL</button>
+</div>
+
+<h3>Danh sách key</h3>
+<div id="keyList"></div>
 
 </body>
 </html>
