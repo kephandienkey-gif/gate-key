@@ -2,242 +2,94 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GATE KEY SYSTEM</title>
+<title>Get Key</title>
 
 <style>
 body{
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-family:monospace;
-  color:white;
-  overflow:hidden;
-
-  background: linear-gradient(-45deg,
-    red, orange, yellow, green, cyan, blue, violet
-  );
-  background-size: 400% 400%;
-  animation: rainbowBG 10s ease infinite;
-}
-
-@keyframes rainbowBG {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:0;
-}
-
-.box{
-  position:relative;
-  z-index:1;
-  padding:40px;
+  font-family:Arial;
   text-align:center;
-  border-radius:20px;
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,0.6);
+  padding:50px;
+  background:linear-gradient(270deg,red,orange,yellow,green,blue,indigo,violet);
+  background-size:1400% 1400%;
+  animation:rainbow 15s ease infinite;
+  color:white;
 }
-
-.box::before{
-  content:"";
-  position:absolute;
-  inset:-3px;
-  border-radius:20px;
-  background: linear-gradient(45deg,red,orange,yellow,green,cyan,blue,violet);
-  background-size:400%;
-  animation: borderRGB 6s linear infinite;
-  z-index:-1;
+@keyframes rainbow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
 }
-
-@keyframes borderRGB{
-  0%{background-position:0%}
-  100%{background-position:400%}
-}
-
-.rainbow-text{
-  font-size:20px;
-  background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
-  background-size: 400%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textRGB 5s linear infinite, shake 1.5s infinite;
-}
-
-@keyframes textRGB{
-  0%{background-position:0%}
-  100%{background-position:400%}
-}
-
-@keyframes shake{
-  0%{transform:translate(0,0)}
-  25%{transform:translate(1px,-1px)}
-  50%{transform:translate(-1px,1px)}
-  75%{transform:translate(1px,1px)}
-  100%{transform:translate(0,0)}
-}
-
 button{
-  padding:10px 20px;
+  padding:15px 30px;
+  font-size:18px;
   border:none;
   border-radius:10px;
   cursor:pointer;
-  font-weight:bold;
-  font-size:14px;
-  margin-top:10px;
-  background:linear-gradient(90deg,cyan,blue);
-  color:white;
-}
-
-#key{
-  font-size:26px;
-  margin-top:20px;
-  letter-spacing:3px;
-  font-weight:bold;
-}
-
-#countdown{
-  margin-top:10px;
-  font-size:16px;
-  color:yellow;
-}
-
-.links{
-  margin-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="particles"></canvas>
+<h1>GET KEY để ủng hộ tui gói mì 🍜</h1>
+<button onclick="generateNewKey()">GET KEY</button>
 
-<div class="box">
-  <h2 class="rainbow-text">🍜 GET KEY ĐỂ ỦNG HỘ TUI GÓI MÌ 🍜</h2>
+<h2 id="result"></h2>
 
-  <button onclick="checkAccess()">GET KEY</button>
+<script type="module">
 
-  <div id="key"></div>
-  <div id="countdown"></div>
-  <button id="copyBtn" style="display:none;" onclick="copyKey()">COPY KEY</button>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <div class="links">
-    <button onclick="window.open('https://zalo.me/g/cocmne792')">💬 ZALO NHÓM</button>
-    <button onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">▶ YOUTUBE</button>
-    <button onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">🎵 TIKTOK</button>
-  </div>
-</div>
+const firebaseConfig = {
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+};
 
-<script>
-const YEULINK = "https://yeulink.com/kephandienkey333";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 function generateKey(){
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result="";
   for(let i=0;i<16;i++){
-    result += chars.charAt(Math.floor(Math.random()*chars.length));
+    result+=chars.charAt(Math.floor(Math.random()*chars.length));
   }
-  return "KPD_" + result.match(/.{1,4}/g).join("-");
+  return "KPD_"+result.match(/.{1,4}/g).join("-");
 }
 
-function checkAccess(){
-  const params = new URLSearchParams(window.location.search);
-
-  if(params.get("done") !== "1"){
-    alert("Bạn chưa vượt link!");
-    window.location.href = YEULINK;
-    return;
+function getDeviceId(){
+  let id = localStorage.getItem("deviceId");
+  if(!id){
+    id="DEV_"+Math.random().toString(36).substring(2,12);
+    localStorage.setItem("deviceId",id);
   }
-
-  let newKey = generateKey();
-  let expire = Date.now() + 24*60*60*1000;
-
-  localStorage.setItem("userKey", newKey);
-  localStorage.setItem("expireTime", expire);
-
-  showKey();
+  return id;
 }
 
-function showKey(){
-  let key = localStorage.getItem("userKey");
-  let expire = localStorage.getItem("expireTime");
+window.generateNewKey = async function(){
 
-  if(!key || !expire) return;
+  let key = generateKey();
+  let deviceId = getDeviceId();
+  let createdAt = Date.now();
+  let expireAt = createdAt + 24*60*60*1000;
 
-  if(Date.now() > expire){
-    document.getElementById("key").innerHTML="KEY HẾT HẠN";
-    localStorage.clear();
-    return;
-  }
-
-  document.getElementById("key").innerHTML = key;
-  document.getElementById("copyBtn").style.display="inline-block";
-
-  setInterval(()=>{
-    let diff = expire - Date.now();
-    if(diff <= 0){
-      document.getElementById("countdown").innerHTML="KEY HẾT HẠN";
-      localStorage.clear();
-      return;
-    }
-    let h = Math.floor(diff/1000/60/60);
-    let m = Math.floor(diff/1000/60)%60;
-    let s = Math.floor(diff/1000)%60;
-    document.getElementById("countdown").innerHTML =
-      "Hết hạn sau: "+h+"h "+m+"m "+s+"s";
-  },1000);
-}
-
-function copyKey(){
-  let key = document.getElementById("key").innerText;
-  navigator.clipboard.writeText(key);
-  alert("Đã copy key!");
-}
-
-showKey();
-
-/* Hạt bay */
-const canvas = document.getElementById("particles");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let particles = [];
-for(let i=0;i<80;i++){
-  particles.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*2,
-    d:Math.random()*1
+  await addDoc(collection(db,"keys"),{
+    key:key,
+    deviceId:deviceId,
+    createdAt:createdAt,
+    expireAt:expireAt
   });
+
+  document.getElementById("result").innerHTML =
+  "Cảm ơn đã ủng hộ ❤️<br><br>" + key;
 }
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="white";
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
-    ctx.fill();
-  });
-  particles.forEach(p=>{
-    p.y+=p.d;
-    if(p.y>canvas.height){
-      p.y=0;
-      p.x=Math.random()*canvas.width;
-    }
-  });
-}
-
-setInterval(draw,30);
 </script>
 
 </body>
