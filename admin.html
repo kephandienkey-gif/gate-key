@@ -10,71 +10,37 @@ body{
   color:white;
   text-align:center;
 }
-input,button,select{
+button{
   padding:10px;
   margin:6px;
   border-radius:10px;
   border:none;
-}
-button{
   background:#00ff99;
   font-weight:bold;
   cursor:pointer;
 }
-.danger{
-  background:red;
-  color:white;
-}
-.orange{
-  background:orange;
-  color:black;
-}
-.keyItem{
-  background:#1c1c1c;
-  margin:10px auto;
-  padding:12px;
-  border-radius:10px;
-  width:90%;
-  max-width:500px;
+#adminPanel{
+  display:none;
 }
 </style>
 </head>
 <body>
 
-<h2>🔑 ADMIN KEY PANEL</h2>
+<h2>🔐 ADMIN LOGIN</h2>
+<button onclick="login()">Đăng nhập Google</button>
+<button onclick="logout()">Đăng xuất</button>
 
-<h3>⚙️ Tạo key hàng loạt</h3>
-
-<input type="text" id="prefix" placeholder="Ký tự đầu (vd VIP-)">
-<input type="number" id="length" placeholder="Độ dài random (vd 8)">
-<input type="number" id="amount" placeholder="Số lượng key">
-<br>
-<input type="number" id="hours" placeholder="Hết hạn sau bao nhiêu giờ">
-<input type="number" id="limit" placeholder="Số lượt dùng (vd 1)">
-<br>
-<button onclick="createBulkKeys()">TẠO KEY</button>
-<button class="danger" onclick="deleteAllKeys()">XÓA TẤT CẢ</button>
-<button class="orange" onclick="deleteUsedKeys()">XÓA KEY ĐÃ DÙNG</button>
-
-<h3>📊 Thống kê</h3>
-Tổng key: <span id="totalKeys">0</span><br>
-Tổng lượt dùng: <span id="totalGet">0</span>
-
-<h3>📋 Danh sách key</h3>
-
-<select id="filterStatus" onchange="renderKeys()">
-  <option value="all">Tất cả</option>
-  <option value="unused">Chưa dùng</option>
-  <option value="used">Đã dùng</option>
-</select>
-
-<div id="keyList"></div>
-<button id="showMoreBtn" onclick="toggleKeys()" style="display:none;">Xem thêm</button>
+<div id="adminPanel">
+  <h2>🔑 ADMIN PANEL</h2>
+  <button onclick="createTestKey()">Tạo test key</button>
+  <button onclick="deleteAll()">Xóa tất cả</button>
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = { 
   apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
@@ -87,165 +53,57 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-let allKeys = [];
-let showAll = false;
+const ADMIN_EMAILS = [
+  "admin1@gmail.com",
+  "admin2@gmail.com"
+];
 
-function randomPart(length){
-  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result="";
-  for(let i=0;i<length;i++){
-    result+=chars.charAt(Math.floor(Math.random()*chars.length));
+window.login = async function(){
+  try{
+    await signInWithPopup(auth, provider);
+  }catch(e){
+    alert("Lỗi đăng nhập");
   }
-  return result;
 }
 
-window.createBulkKeys = async function(){
-
-  const prefix=document.getElementById("prefix").value || "";
-  const length=parseInt(document.getElementById("length").value) || 8;
-  const amount=parseInt(document.getElementById("amount").value);
-  const hours=parseInt(document.getElementById("hours").value);
-  const limit=parseInt(document.getElementById("limit").value) || 1;
-
-  if(!amount || !hours) return alert("Nhập đủ số lượng & giờ");
-
-  for(let i=0;i<amount;i++){
-    await addDoc(collection(db,"keys"),{
-      key: prefix + randomPart(length),
-      expire: new Date(Date.now()+hours*60*60*1000),
-      limit: limit,
-      get: 0
-    });
-  }
-
-  alert("Đã tạo "+amount+" key!");
-  loadKeys();
+window.logout = async function(){
+  await signOut(auth);
+  location.reload();
 }
 
-window.deleteAllKeys = async function(){
-  if(!confirm("Xóa toàn bộ key?")) return;
+onAuthStateChanged(auth, (user)=>{
+  if(user){
 
+    if(!ADMIN_EMAILS.includes(user.email)){
+      alert("Không có quyền truy cập!");
+      logout();
+      return;
+    }
+
+    document.getElementById("adminPanel").style.display="block";
+  }
+});
+
+window.createTestKey = async function(){
+  await addDoc(collection(db,"keys"),{
+    key:"TEST-"+Math.floor(Math.random()*99999),
+    expire:new Date(Date.now()+3600000),
+    limit:1,
+    get:0
+  });
+  alert("Đã tạo test key");
+}
+
+window.deleteAll = async function(){
   const snapshot=await getDocs(collection(db,"keys"));
   for(const docSnap of snapshot.docs){
     await deleteDoc(doc(db,"keys",docSnap.id));
   }
-  loadKeys();
+  alert("Đã xóa");
 }
-
-window.deleteUsedKeys = async function(){
-  if(!confirm("Xóa tất cả key đã dùng?")) return;
-
-  const snapshot=await getDocs(collection(db,"keys"));
-
-  for(const docSnap of snapshot.docs){
-    const data=docSnap.data();
-    if((data.get||0) > 0){
-      await deleteDoc(doc(db,"keys",docSnap.id));
-    }
-  }
-
-  loadKeys();
-}
-
-window.toggleKeys = function(){
-  showAll = !showAll;
-  renderKeys();
-}
-
-async function loadKeys(){
-
-  const snapshot=await getDocs(collection(db,"keys"));
-  const now=Date.now();
-
-  allKeys=[];
-  let totalGet=0;
-
-  for(const docSnap of snapshot.docs){
-
-    const data=docSnap.data();
-    const expireTime=data.expire.seconds*1000;
-
-    if(expireTime<=now){
-      await deleteDoc(doc(db,"keys",docSnap.id));
-      continue;
-    }
-
-    allKeys.push({id:docSnap.id,...data});
-    totalGet+=data.get||0;
-  }
-
-  document.getElementById("totalKeys").innerText=allKeys.length;
-  document.getElementById("totalGet").innerText=totalGet;
-
-  renderKeys();
-}
-
-function renderKeys(){
-
-  const keyList=document.getElementById("keyList");
-  const showMoreBtn=document.getElementById("showMoreBtn");
-  const filter=document.getElementById("filterStatus").value;
-
-  keyList.innerHTML="";
-
-  let filteredKeys = allKeys;
-
-  if(filter==="unused"){
-    filteredKeys = allKeys.filter(k => (k.get||0) === 0);
-  }
-
-  if(filter==="used"){
-    filteredKeys = allKeys.filter(k => (k.get||0) > 0);
-  }
-
-  let keysToShow = showAll ? filteredKeys : filteredKeys.slice(0,2);
-
-  keysToShow.forEach(data=>{
-    const div=document.createElement("div");
-    div.className="keyItem";
-    div.innerHTML=`
-      🔑 ${data.key}<br>
-      ⏳ ${new Date(data.expire.seconds*1000).toLocaleString()}<br>
-      🔥 ${data.get||0}/${data.limit}<br>
-      <button onclick="deleteKey('${data.id}')">XÓA</button>
-    `;
-    keyList.appendChild(div);
-  });
-
-  if(filteredKeys.length > 2){
-    showMoreBtn.style.display="inline-block";
-    showMoreBtn.innerText = showAll ? "Thu gọn" : "Xem thêm";
-  } else {
-    showMoreBtn.style.display="none";
-  }
-}
-
-window.deleteKey=async function(id){
-  await deleteDoc(doc(db,"keys",id));
-  loadKeys();
-}
-
-async function autoDeleteExpiredKeys(){
-  const snapshot=await getDocs(collection(db,"keys"));
-  const now=Date.now();
-
-  for(const docSnap of snapshot.docs){
-    const data=docSnap.data();
-    if(!data.expire) continue;
-
-    const expireTime=data.expire.seconds*1000;
-
-    if(expireTime<=now){
-      await deleteDoc(doc(db,"keys",docSnap.id));
-    }
-  }
-
-  loadKeys();
-}
-
-loadKeys();
-setInterval(autoDeleteExpiredKeys,60000);
 
 </script>
 </body>
