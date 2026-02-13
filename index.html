@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Get Key</title>
+
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  padding:50px;
+  background:linear-gradient(270deg,red,orange,yellow,green,blue,indigo,violet);
+  background-size:1400% 1400%;
+  animation:rainbow 15s ease infinite;
+  color:white;
+}
+@keyframes rainbow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+button{
+  padding:15px 30px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>GET KEY để ủng hộ tui gói mì 🍜</h1>
+<button onclick="generateNewKey()">GET KEY</button>
+
+<h2 id="result"></h2>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+function generateKey(){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result="";
+  for(let i=0;i<16;i++){
+    result+=chars.charAt(Math.floor(Math.random()*chars.length));
+  }
+  return "KPD_"+result.match(/.{1,4}/g).join("-");
+}
+
+function getDeviceId(){
+  let id = localStorage.getItem("deviceId");
+  if(!id){
+    id="DEV_"+Math.random().toString(36).substring(2,12);
+    localStorage.setItem("deviceId",id);
+  }
+  return id;
+}
+
+window.generateNewKey = async function(){
+
+  let key = generateKey();
+  let deviceId = getDeviceId();
+  let createdAt = Date.now();
+  let expireAt = createdAt + 24*60*60*1000;
+
+  await addDoc(collection(db,"keys"),{
+    key:key,
+    deviceId:deviceId,
+    createdAt:createdAt,
+    expireAt:expireAt
+  });
+
+  document.getElementById("result").innerHTML =
+  "Cảm ơn đã ủng hộ ❤️<br><br>" + key;
+}
+
+</script>
+
+</body>
+</html>
