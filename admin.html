@@ -2,92 +2,150 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ADMIN CONTROL PANEL</title>
+<title>ADMIN KEY</title>
+<style>
+body{
+  font-family:sans-serif;
+  background:#0f0f0f;
+  color:white;
+  text-align:center;
+}
+input,button,select{
+  padding:10px;
+  margin:6px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#00ff99;
+  font-weight:bold;
+  cursor:pointer;
+}
+.danger{
+  background:red;
+  color:white;
+}
+.orange{
+  background:orange;
+  color:black;
+}
+.keyItem{
+  background:#1c1c1c;
+  margin:10px auto;
+  padding:12px;
+  border-radius:10px;
+  width:90%;
+  max-width:500px;
+}
+</style>
+</head>
+<body>
+
+<h2>🔑 ADMIN KEY PANEL</h2>
+
+<h3>⚙️ Tạo key hàng loạt</h3>
+
+<input type="text" id="prefix" placeholder="Ký tự đầu (vd VIP-)">
+<input type="number" id="length" placeholder="Độ dài random (vd 8)">
+<input type="number" id="amount" placeholder="Số lượng key">
+<br>
+<input type="number" id="hours" placeholder="Hết hạn sau bao nhiêu giờ">
+<input type="number" id="limit" placeholder="Số lượt dùng (vd 1)">
+<br>
+<button onclick="createBulkKeys()">TẠO KEY</button>
+<button class="danger" onclick="deleteAllKeys()">XÓA TẤT CẢ</button>
+<button class="orange" onclick="deleteUsedKeys()">XÓA KEY ĐÃ DÙNG</button>
+
+<h3>📊 Thống kê</h3>
+Tổng key: <span id="totalKeys">0</span><br>
+Tổng lượt dùng: <span id="totalGet">0</span>
+
+<h3>📋 Danh sách key</h3>
+
+<select id="filterStatus" onchange="renderKeys()">
+  <option value="all">Tất cả</option>
+  <option value="unused">Chưa dùng</option>
+  <option value="used">Đã dùng</option>
+</select>
+
+<div id="keyList"></div>
+<button id="showMoreBtn" onclick="toggleKeys()" style="display:none;">Xem thêm</button>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import { 
-  getAuth, onAuthStateChanged, signOut 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { 
-  apiKey : "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw" , 
-  authDomain : "kephandienkey-fbee7.firebaseapp.com" , 
-  projectId : "kephandienkey-fbee7" , 
-  storageBucket : "kephandienkey-fbee7.firebasestorage.app" , 
-  messagingSenderId : "1004820527441" , 
-  appId : "1:1004820527441:web:a2ffa3aefb82b99a97fb70" 
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
-
-const ADMIN_EMAIL = "kephandienkey@gmail.com";
 
 let allKeys = [];
 let showAll = false;
 
-onAuthStateChanged(auth, (user) => {
-  if (!user || user.email !== ADMIN_EMAIL) {
-    alert("Không phải admin!");
-    window.location.href = "/";
-  } else {
-    loadKeys();
+function randomPart(length){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result="";
+  for(let i=0;i<length;i++){
+    result+=chars.charAt(Math.floor(Math.random()*chars.length));
   }
-});
-
-function randomKey() {
-  return "KEY-" + Math.random().toString(36).substring(2,10).toUpperCase();
+  return result;
 }
 
-// LOAD KEY
-async function loadKeys() {
-  const snapshot = await getDocs(collection(db, "keys"));
-  allKeys = [];
-  let totalGet = 0;
+window.createBulkKeys = async function(){
 
-  snapshot.forEach(d => {
-    const data = d.data();
-    totalGet += data.used || 0;
+  const prefix=document.getElementById("prefix").value || "";
+  const length=parseInt(document.getElementById("length").value) || 8;
+  const amount=parseInt(document.getElementById("amount").value);
+  const hours=parseInt(document.getElementById("hours").value);
+  const limit=parseInt(document.getElementById("limit").value) || 1;
 
-    allKeys.push({
-      id: d.id,
-      ...data
+  if(!amount || !hours) return alert("Nhập đủ số lượng & giờ");
+
+  for(let i=0;i<amount;i++){
+    await addDoc(collection(db,"keys"),{
+      key: prefix + randomPart(length),
+      expire: new Date(Date.now()+hours*60*60*1000),
+      limit: limit,
+      get: 0
     });
-  });
+  }
 
-  document.getElementById("totalKeys").innerText = allKeys.length;
-  document.getElementById("totalGet").innerText = totalGet;
-
-  renderKeys();
+  alert("Đã tạo "+amount+" key!");
+  loadKeys();
 }
 
-// HIỂN THỊ KEY
-function renderKeys() {
-  const list = document.getElementById("keyList");
-  list.innerHTML = "";
+window.deleteAllKeys = async function(){
+  if(!confirm("Xóa toàn bộ key?")) return;
 
-  const keysToShow = showAll ? allKeys : allKeys.slice(0,3);
+  const snapshot=await getDocs(collection(db,"keys"));
+  for(const docSnap of snapshot.docs){
+    await deleteDoc(doc(db,"keys",docSnap.id));
+  }
+  loadKeys();
+}
 
-  keysToShow.forEach(k => {
-    list.innerHTML += `
-      <div class="card">
-        🔑 ${k.key}<br>
-        🔥 Lượt get: ${k.used || 0}
-        <br><br>
-        <button onclick="deleteKey('${k.id}')" class="red">XÓA</button>
-      </div>
-    `;
-  });
+window.deleteUsedKeys = async function(){
+  if(!confirm("Xóa tất cả key đã dùng?")) return;
 
-  document.getElementById("toggleBtn").innerText =
-    showAll ? "Thu gọn" : "Xem thêm";
+  const snapshot=await getDocs(collection(db,"keys"));
+
+  for(const docSnap of snapshot.docs){
+    const data=docSnap.data();
+    if((data.get||0) > 0){
+      await deleteDoc(doc(db,"keys",docSnap.id));
+    }
+  }
+
+  loadKeys();
 }
 
 window.toggleKeys = function(){
@@ -95,163 +153,100 @@ window.toggleKeys = function(){
   renderKeys();
 }
 
-// TẠO KEY THƯỜNG
-window.createKey = async function(){
-  const keyText = document.getElementById("customKey").value.trim();
-  const expireDays = parseInt(document.getElementById("expireDays").value);
+async function loadKeys(){
 
-  if(!keyText || !expireDays) return alert("Nhập thiếu!");
+  const snapshot=await getDocs(collection(db,"keys"));
+  const now=Date.now();
 
-  await addDoc(collection(db,"keys"),{
-    key: keyText,
-    expire: Date.now() + expireDays*24*60*60*1000,
-    used:0
-  });
+  allKeys=[];
+  let totalGet=0;
 
-  alert("Tạo thành công!");
-  loadKeys();
-};
+  for(const docSnap of snapshot.docs){
 
-// TẠO RANDOM
-window.createRandom = async function(){
-  await addDoc(collection(db,"keys"),{
-    key: randomKey(),
-    expire: Date.now() + 1*24*60*60*1000,
-    used:0
-  });
+    const data=docSnap.data();
+    const expireTime=data.expire.seconds*1000;
 
-  alert("Đã tạo random!");
-  loadKeys();
-};
+    if(expireTime<=now){
+      await deleteDoc(doc(db,"keys",docSnap.id));
+      continue;
+    }
 
-// TẠO HÀNG LOẠT
-window.createBulk = async function(){
-  const amount = parseInt(document.getElementById("bulkAmount").value);
-  if(!amount || amount<=0) return alert("Nhập số lượng hợp lệ");
-
-  for(let i=0;i<amount;i++){
-    await addDoc(collection(db,"keys"),{
-      key: randomKey(),
-      expire: Date.now() + 1*24*60*60*1000,
-      used:0
-    });
+    allKeys.push({id:docSnap.id,...data});
+    totalGet+=data.get||0;
   }
 
-  alert("Tạo hàng loạt xong!");
-  loadKeys();
-};
+  document.getElementById("totalKeys").innerText=allKeys.length;
+  document.getElementById("totalGet").innerText=totalGet;
 
-// XÓA 1 KEY
-window.deleteKey = async function(id){
+  renderKeys();
+}
+
+function renderKeys(){
+
+  const keyList=document.getElementById("keyList");
+  const showMoreBtn=document.getElementById("showMoreBtn");
+  const filter=document.getElementById("filterStatus").value;
+
+  keyList.innerHTML="";
+
+  let filteredKeys = allKeys;
+
+  if(filter==="unused"){
+    filteredKeys = allKeys.filter(k => (k.get||0) === 0);
+  }
+
+  if(filter==="used"){
+    filteredKeys = allKeys.filter(k => (k.get||0) > 0);
+  }
+
+  let keysToShow = showAll ? filteredKeys : filteredKeys.slice(0,2);
+
+  keysToShow.forEach(data=>{
+    const div=document.createElement("div");
+    div.className="keyItem";
+    div.innerHTML=`
+      🔑 ${data.key}<br>
+      ⏳ ${new Date(data.expire.seconds*1000).toLocaleString()}<br>
+      🔥 ${data.get||0}/${data.limit}<br>
+      <button onclick="deleteKey('${data.id}')">XÓA</button>
+    `;
+    keyList.appendChild(div);
+  });
+
+  if(filteredKeys.length > 2){
+    showMoreBtn.style.display="inline-block";
+    showMoreBtn.innerText = showAll ? "Thu gọn" : "Xem thêm";
+  } else {
+    showMoreBtn.style.display="none";
+  }
+}
+
+window.deleteKey=async function(id){
   await deleteDoc(doc(db,"keys",id));
   loadKeys();
-};
+}
 
-// XÓA TẤT CẢ
-window.deleteAllKeys = async function(){
-  if(!confirm("Xóa toàn bộ key?")) return;
+async function autoDeleteExpiredKeys(){
+  const snapshot=await getDocs(collection(db,"keys"));
+  const now=Date.now();
 
-  const snapshot = await getDocs(collection(db,"keys"));
-  for(const d of snapshot.docs){
-    await deleteDoc(doc(db,"keys",d.id));
+  for(const docSnap of snapshot.docs){
+    const data=docSnap.data();
+    if(!data.expire) continue;
+
+    const expireTime=data.expire.seconds*1000;
+
+    if(expireTime<=now){
+      await deleteDoc(doc(db,"keys",docSnap.id));
+    }
   }
 
-  alert("Đã xóa toàn bộ!");
   loadKeys();
-};
+}
 
-window.logout = function(){
-  signOut(auth);
-};
+loadKeys();
+setInterval(autoDeleteExpiredKeys,60000);
 
 </script>
-
-<style>
-body{
-  background:#0f0f0f;
-  font-family:Arial;
-  color:white;
-  text-align:center;
-}
-.panel{
-  width:400px;
-  margin:20px auto;
-  background:#1c1c1c;
-  padding:20px;
-  border-radius:20px;
-}
-input{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border-radius:10px;
-  border:none;
-}
-button{
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  border:none;
-  border-radius:12px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.green{background:#00c853;color:white;}
-.blue{background:#2979ff;color:white;}
-.red{background:#d50000;color:white;}
-.orange{background:#ff9100;color:black;}
-.card{
-  background:#2a2a2a;
-  padding:15px;
-  margin:10px 0;
-  border-radius:15px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="panel">
-
-<h2>🔐 ADMIN CONTROL PANEL</h2>
-
-<p>📦 Tổng key: <span id="totalKeys">0</span></p>
-<p>🔥 Tổng lượt get: <span id="totalGet">0</span></p>
-
-<h3>Tạo Key</h3>
-
-<input id="customKey" placeholder="Nhập key muốn tạo">
-<input id="expireDays" type="number" placeholder="Số ngày sử dụng">
-
-<button onclick="createKey()" class="green">TẠO KEY</button>
-<button onclick="createRandom()" class="blue">TẠO RANDOM</button>
-
-<hr>
-
-<h3>Tạo hàng loạt</h3>
-<input id="bulkAmount" type="number" placeholder="Số lượng key">
-<button onclick="createBulk()" class="green">TẠO HÀNG LOẠT</button>
-
-<button onclick="deleteAllKeys()" class="red">
-XÓA TẤT CẢ KEY
-</button>
-
-<hr>
-
-<h3>Danh sách key</h3>
-<div id="keyList"></div>
-
-<button onclick="toggleKeys()" id="toggleBtn" class="blue">
-Xem thêm
-</button>
-
-<hr>
-
-<button onclick="logout()" class="orange">
-Đăng xuất
-</button>
-
-</div>
-
 </body>
 </html>
