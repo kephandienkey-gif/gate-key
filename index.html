@@ -1,138 +1,221 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>GET KEY</title>
+<title>GATE KEY SYSTEM</title>
 
 <style>
 body{
-    margin:0;
-    background: linear-gradient(135deg,#0f0f0f,#1a1a1a,#000);
-    font-family: monospace;
-    color:#0f0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:monospace;
+  color:white;
+  overflow:hidden;
+
+  background: linear-gradient(-45deg,
+    red, orange, yellow, green, cyan, blue, violet
+  );
+  background-size: 400% 400%;
+  animation: rainbowBG 10s ease infinite;
+}
+
+@keyframes rainbowBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hạt bay */
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:0;
 }
 
 .box{
-    background:#111;
-    padding:40px;
-    border-radius:20px;
-    box-shadow:0 0 40px #00ffcc;
-    width:420px;
-    text-align:center;
+  position:relative;
+  z-index:1;
+  padding:40px;
+  text-align:center;
+  border-radius:20px;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.6);
+  box-shadow:0 0 30px rgba(0,0,0,0.5);
 }
 
-h1{
-    font-size:28px;
-    margin-bottom:20px;
-    text-shadow:0 0 10px #00ffcc;
+.box::before{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border-radius:20px;
+  background: linear-gradient(45deg,red,orange,yellow,green,cyan,blue,violet);
+  background-size:400%;
+  animation: borderRGB 6s linear infinite;
+  z-index:-1;
+}
+
+@keyframes borderRGB{
+  0%{background-position:0%}
+  100%{background-position:400%}
 }
 
 button{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border:none;
-    border-radius:10px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
+  padding:12px 25px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:16px;
+  margin-top:15px;
+  background:linear-gradient(90deg,cyan,blue);
+  color:white;
 }
 
-.mainbtn{
-    background:linear-gradient(45deg,#00ffcc,#00ff66);
+#key{
+  font-size:30px;
+  margin-top:20px;
+  letter-spacing:3px;
+  font-weight:bold;
 }
 
-.linkbtn{
-    background:linear-gradient(45deg,#ff00cc,#9900ff);
-    color:white;
-}
-
-button:hover{
-    transform:scale(1.05);
-    box-shadow:0 0 15px #00ffcc;
-}
-
-.keybox{
-    margin-top:20px;
-    font-size:24px;
-    word-break:break-all;
+#countdown{
+  margin-top:10px;
+  font-size:18px;
+  color:yellow;
 }
 </style>
 </head>
-
 <body>
 
+<canvas id="particles"></canvas>
+
 <div class="box">
-
-<h1>GET KEY ỦNG HỘ TUI GÓI MÌ ĐÊ</h1>
-
-<button class="mainbtn" onclick="goLink()">GET KEY 🔑</button>
-
-<button class="linkbtn" onclick="window.open('https://zalo.me/g/cocmne792')">ZALO</button>
-<button class="linkbtn" onclick="window.open('https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1')">YOUTUBE</button>
-<button class="linkbtn" onclick="window.open('https://tiktok.com/@ghetnhanvatchinhkk')">TIKTOK</button>
-
-<div class="keybox" id="keybox"></div>
-<button id="copybtn" style="display:none;" onclick="copyKey()">COPY KEY</button>
-
+  <h2>🔥 GATE KEY SYSTEM 🔥</h2>
+  <button onclick="checkAccess()">GET KEY</button>
+  <div id="key"></div>
+  <div id="countdown"></div>
+  <button id="copyBtn" style="display:none;" onclick="copyKey()">COPY</button>
 </div>
 
 <script>
+// ========= CONFIG =========
+const YEULINK_DONE = "https://yeulink.com/kephandienkey333";
+// ===========================
 
-const yeulink = "https://yeulink.com/kephandienkey333";
-
-function goLink(){
-    window.location.href = yeulink;
-}
-
+// random key
 function generateKey(){
-    return "KEY-" + Math.random().toString(36).substring(2,10).toUpperCase();
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for(let i=0;i<16;i++){
+    result += chars.charAt(Math.floor(Math.random()*chars.length));
+  }
+  return result.match(/.{1,4}/g).join("-");
 }
 
-function showKey(key){
-    document.getElementById("keybox").innerHTML = key;
-    document.getElementById("copybtn").style.display="block";
+// check vượt link
+function checkAccess(){
+  if(!document.referrer.includes("yeulink")){
+    alert("Bạn chưa vượt link!");
+    window.location.href = YEULINK_DONE;
+    return;
+  }
+
+  let newKey = generateKey();
+  let expire = Date.now() + 24*60*60*1000;
+
+  localStorage.setItem("userKey", newKey);
+  localStorage.setItem("expireTime", expire);
+
+  showKey();
+}
+
+function showKey(){
+  let key = localStorage.getItem("userKey");
+  let expire = localStorage.getItem("expireTime");
+
+  if(!key || !expire){
+    return;
+  }
+
+  if(Date.now() > expire){
+    document.getElementById("key").innerHTML="KEY HẾT HẠN";
+    localStorage.clear();
+    return;
+  }
+
+  document.getElementById("key").innerHTML = key;
+  document.getElementById("copyBtn").style.display="inline-block";
+
+  startCountdown(expire);
+}
+
+function startCountdown(expire){
+  setInterval(()=>{
+    let diff = expire - Date.now();
+    if(diff <= 0){
+      document.getElementById("countdown").innerHTML="KEY HẾT HẠN";
+      localStorage.clear();
+      return;
+    }
+    let h = Math.floor(diff/1000/60/60);
+    let m = Math.floor(diff/1000/60)%60;
+    let s = Math.floor(diff/1000)%60;
+
+    document.getElementById("countdown").innerHTML =
+      "Hết hạn sau: "+h+"h "+m+"m "+s+"s";
+  },1000);
 }
 
 function copyKey(){
-    let text = document.getElementById("keybox").innerText;
-    navigator.clipboard.writeText(text);
-    alert("Đã copy key!");
+  let key = document.getElementById("key").innerText;
+  navigator.clipboard.writeText(key);
+  alert("Đã copy key!");
 }
 
-function checkKey(){
+showKey();
 
-    let url = new URL(window.location.href);
+// ====== HẠT BAY ======
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    if(url.searchParams.get("done")==="1"){
-
-        let newKey = generateKey();
-        let expire = Date.now() + 24*60*60*1000;
-
-        localStorage.setItem("user_key",newKey);
-        localStorage.setItem("expire_time",expire);
-
-        showKey(newKey);
-
-        window.history.replaceState({},document.title,window.location.pathname);
-        return;
-    }
-
-    let savedKey = localStorage.getItem("user_key");
-    let expireTime = localStorage.getItem("expire_time");
-
-    if(savedKey && expireTime && Date.now() < expireTime){
-        showKey(savedKey);
-    }
-
+let particles = [];
+for(let i=0;i<100;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*2,
+    d:Math.random()*1
+  });
 }
 
-checkKey();
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="white";
+  particles.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2,true);
+    ctx.fill();
+  });
+  update();
+}
 
+function update(){
+  particles.forEach(p=>{
+    p.y+=p.d;
+    if(p.y>canvas.height){
+      p.y=0;
+      p.x=Math.random()*canvas.width;
+    }
+  });
+}
+
+setInterval(draw,30);
 </script>
 
 </body>
