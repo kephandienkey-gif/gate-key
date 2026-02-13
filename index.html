@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>GET KEY 24H</title>
+<style>
+*{box-sizing:border-box;font-family:Consolas,monospace}
+body{
+  margin:0;height:100vh;display:flex;justify-content:center;align-items:center;
+  background:radial-gradient(circle at top,#003a2f,#000);
+  color:#00ffcc;
+}
+.box{
+  background:#001812;
+  border:2px solid #00ffcc;
+  box-shadow:0 0 30px #00ffcc;
+  padding:25px;
+  width:320px;
+  text-align:center;
+  border-radius:10px;
+}
+h2{
+  margin:0 0 10px;
+  font-size:16px;
+  min-height:20px;
+}
+.key{
+  font-size:26px;
+  font-weight:bold;
+  margin:15px 0;
+  color:#7CFF00;
+  text-shadow:0 0 10px #7CFF00;
+  word-break:break-all;
+}
+button,a{
+  display:block;
+  width:100%;
+  margin:8px 0;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  color:#fff;
+  font-weight:bold;
+  text-decoration:none;
+  cursor:pointer;
+}
+.get{background:#00ffcc;color:#000}
+.copy{background:#222}
+.zalo{background:#0068ff}
+.yt{background:#ff0000}
+.tt{background:#000}
+small{opacity:.7}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2 id="type"></h2>
+
+  <button class="get" onclick="getKey()">GET KEY 🔑</button>
+
+  <div id="keyBox" style="display:none">
+    <div class="key" id="key"></div>
+    <button class="copy" onclick="copyKey()">COPY KEY</button>
+    <small>⏳ Key có hiệu lực 24 giờ</small>
+  </div>
+
+  <a class="zalo" href="https://zalo.me/g/cocmne792" target="_blank">Nhóm Zalo</a>
+  <a class="yt" href="https://youtube.com/@ghetnhanvatchinh?si=ZfPgvO2sKD8dL1i1" target="_blank">YouTube</a>
+  <a class="tt" href="https://tiktok.com/@ghetnhanvatchinhkk" target="_blank">TikTok</a>
+</div>
+
+<script>
+/* chữ gõ hacker */
+const text="GET KEY – ỦNG HỘ TUI GÓI MÌ ĐÊ 🍜";
+let i=0;
+setInterval(()=>{
+  document.getElementById("type").textContent=text.slice(0,i++);
+  if(i>text.length)i=0;
+},80);
+
+/* tạo key */
+function genKey(){
+  return "kpd_"+Math.random().toString(36).substring(2,10).toUpperCase();
+}
+
+function getKey(){
+  let data=JSON.parse(localStorage.getItem("userKey"));
+  let now=Date.now();
+
+  if(data && now<data.expire){
+    showKey(data.key);
+    return;
+  }
+
+  let key=genKey();
+  let expire=now+24*60*60*1000;
+  localStorage.setItem("userKey",JSON.stringify({key,expire}));
+  showKey(key);
+}
+
+function showKey(k){
+  document.getElementById("key").textContent=k;
+  document.getElementById("keyBox").style.display="block";
+}
+
+function copyKey(){
+  navigator.clipboard.writeText(document.getElementById("key").textContent);
+  alert("Đã copy key!");
+}
+</script>
+
+</body>
+</html>
