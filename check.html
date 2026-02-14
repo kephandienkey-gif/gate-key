@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Check Key</title>
+</head>
+<body style="background:black;color:lime;font-family:monospace;text-align:center;margin-top:50px;">
+
+<div id="result">Checking key...</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = { 
+  apiKey: "AIzaSyCBoDV8N9q56YjrNlKoiQk6c6fYDNJL2pw",
+  authDomain: "kephandienkey-fbee7.firebaseapp.com",
+  projectId: "kephandienkey-fbee7",
+  storageBucket: "kephandienkey-fbee7.firebasestorage.app",
+  messagingSenderId: "1004820527441",
+  appId: "1:1004820527441:web:a2ffa3aefb82b99a97fb70"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const urlParams = new URLSearchParams(window.location.search);
+const key = urlParams.get("key");
+
+const resultDiv = document.getElementById("result");
+
+if (!key) {
+    resultDiv.innerText = "NO_KEY";
+} else {
+
+    try {
+
+        const keyRef = doc(db, "keys", key);
+        const keySnap = await getDoc(keyRef);
+
+        if (keySnap.exists()) {
+
+            const data = keySnap.data();
+
+            // Nếu đã dùng
+            if (data.used === true) {
+                resultDiv.innerText = "USED";
+            } 
+            else {
+
+                // Nếu có thời gian hết hạn
+                if (data.expireAt && Date.now() > data.expireAt) {
+                    resultDiv.innerText = "EXPIRED";
+                } 
+                else {
+
+                    // Đánh dấu đã dùng
+                    await updateDoc(keyRef, {
+                        used: true,
+                        usedAt: Date.now()
+                    });
+
+                    resultDiv.innerText = "VALID";
+                }
+            }
+
+        } else {
+            resultDiv.innerText = "INVALID";
+        }
+
+    } catch (error) {
+        resultDiv.innerText = "ERROR";
+    }
+}
+
+</script>
+
+</body>
+</html>
